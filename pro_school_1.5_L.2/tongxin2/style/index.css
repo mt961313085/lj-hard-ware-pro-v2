@@ -1,0 +1,34 @@
+@charset "utf-8";
+
+.margin_auto{width:1100px;margin:0 auto;}
+/*body*/
+.body{background:url("../img/cccc_07.png");}
+/*next_body*/
+.body .next_body .l_next_body{width:320px;background-color: #84d3fa;;box-shadow: 0px 0px 10px 3px #dddddd;}
+.body .next_body .l_next_body .tit i{margin:3px 5px 0 0;float:left;display: block;background:url("../img/usually/xiaotu.gif") no-repeat;width:17px;height: 18px;}
+.body .next_body .l_next_body .tit span{font-size: 16px;font-weight:bold;color:#737373;}
+.body .next_body .l_next_body .tit{text-align:center;padding: 12px 0;background:#FFFFFF}
+.body .next_body .l_next_body .next{padding-bottom:57px;background:#FFFFFF;margin-top:2px;}
+
+.body .next_body .l_next_body .next .tic{padding: 22px 0 0 26px;}
+.body .next_body .l_next_body .next .tic input[type=text]{width:82px;font-size:16px;height: 22px;}
+.body .next_body .l_next_body .next li{float:none;font-size:15px;border-bottom: 1px dashed #eeeeee;padding-bottom: 14px;}
+.body .next_body .l_next_body .next li a{color:#555555;}
+.body .next_body .l_next_body .next li.selected a{color:#059ad2;}
+.body .next_body .l_next_body .next li a:hover{color:#059ad2;}
+
+.body .next_body .r_next_body .next a{color:#05a8f5;}
+.body .next_body .r_next_body{width:700px;box-shadow: 0px 0px 10px 3px #dddddd;background:#84d3fa;position: absolute;left: 30%;top: 30%;}
+.body .next_body .r_next_body .tit{padding: 12px 190px;background:#FFFFFF;}
+.body .next_body .r_next_body .next{padding: 28px 44px 33px 43px;background:#FFFFFF;margin-top:2px;font-size:14px;}
+.body .next_body .r_next_body .next table input[type=text]{width:360px;height:35px;border: 1px solid #ccc;border-radius: 3px;}
+.body .next_body .r_next_body .next table tr{height:40px;line-height:50px;}
+.body .next_body .r_next_body .next table tr th{text-align:right;}
+.body .next_body .r_next_body .next table tr td{float: left;width: 120px;}
+.body .next_body .r_next_body .next table tr td .r_words{padding-left:10px;}
+.btn_disable{display:block;cursor:pointer;border-radius:4px;border:0;width:90px;height:36px;line-height:36px;color:#FFFFFF;text-align:center;background:gray;}
+.btn9527{display:block;cursor:pointer;border-radius:4px;border:0;width:90px;height:36px;line-height:36px;color:#FFFFFF;text-align:center;color:#FFFFFF;background:#2c9dd9;}
+.btn9527:hover{background:#2A93CB;}
+.btn9527:active{background:#2A93CB}
+
+
