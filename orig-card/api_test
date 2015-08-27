@@ -1,0 +1,190 @@
+学号：201330401006  
+密码：111111 
+编号：4000002
+名称：水电扣费 
+
+
+login
+{
+  "password" : "111111",
+  "stu_no" : "000020300032",
+  "t" : "1439825959",
+  "n" : "f0bdff",
+  "sign" : "a606396017e1fb72c3f7ff004e81cbda9c3f7a05",
+  "action" : "login"
+}
+0000203000322731DCCE51E1D2A7E7BF25B92921C4BD
+
+//开设备
+
+{
+  "stu_no" : "000020300032",
+  "token" : "0000203000322731DCCE51E1D2A7E7BF25B92921C4BD",
+  "device_id":"J65011",
+  "time" :20,
+  "delay_open":0,
+  "delay_close":0,
+  "t" : "1439825959",
+  "n" : "f0bdff",
+  "sign" : "a606396017e1fb72c3f7ff004e81cbda9c3f7a05",
+  "action" : "openShower"
+}
+
+//关设备
+
+{
+  "stu_no" : "000020300032",
+  "token" : "2015201520153D9DD499885977FAAFDA4FBF302A63A6",
+  "device_id":"J61031",
+  "time" :20,
+  "delay_open":0,
+  "delay_close":0,
+  "t" : "1439825959",
+  "n" : "f0bdff",
+  "sign" : "a606396017e1fb72c3f7ff004e81cbda9c3f7a05",
+  "action" : "closeShower"
+}
+
+2015201520153D9DD499885977FAAFDA4FBF302A63A6
+
+
+0000203000322731DCCE51E1D2A7E7BF25B92921C4BD
+
+
+{
+  "stu_no" : "000020300032",
+  "token" : "00002030003214CBEA604BE15E963B4D968A5EACD424",
+  "t" : "1439825959",
+  "n" : "f0bdff",
+  "sign" : "a606396017e1fb72c3f7ff004e81cbda9c3f7a05",
+  "action" : "getDeviceList"
+}
+
+0000203000329E4A54676035FC8A649062A7A3F8DF9E
+{
+  "password" : "111111",
+  "name" : "ddd",
+  "token":"00002030003287EA5C45B842ED7428FD3C05E5343038",
+  "stu_no" : "000020300032",
+  "money":"320",
+  "t" : "1439825959",
+  "n" : "f0bdff",
+  "sign" : "a606396017e1fb72c3f7ff004e81cbda9c3f7a05",
+  "action" : "recharge"
+}
+
+{
+  "password" : "111111",
+  "token":"000020300032439534BE304B925FD4089D69116C5205",
+  "stu_no" : "000020300032",
+  "page_index":1,
+  "page_szie":10,
+  "begin_date":"20150101000000",
+  "end_date":"20150801000000",
+  "t" : "1439825959",
+  "n" : "f0bdff",
+  "sign" : "a606396017e1fb72c3f7ff004e81cbda9c3f7a05",
+  "action" : "getCardTransaction"
+}
+
+
+"stu_no":"1234",
+"action":"unbindDevice",
+"device_id":"01501"，
+"token":"11111111",
+"msg":"快来修啊",
+"desc":"热水器坏了"
+"type":"1"
+
+{
+  "password" : "111111",
+  "token":"00002030003215D8A70ED0DFFA957FBA5DEB53F7B4B3",
+  "stu_no" : "000020300032",
+  "page_index":1,
+  "page_szie":10,
+  "begin_date":"20150101000000",
+  "end_date":"20150801000000",
+  "t" : "1439825959",
+  "n" : "f0bdff",
+  "sign" : "a606396017e1fb72c3f7ff004e81cbda9c3f7a05",
+  "action" : "getSubsidyList"
+}
+
+{
+  "password" : "111111",
+  "token":"00002030003215D8A70ED0DFFA957FBA5DEB53F7B4B3",
+  "stu_no" : "000020300032",
+  "branch":"4000002",
+  "fee":"150",
+  "t" : "1439825959",
+  "n" : "f0bdff",
+  "sign" : "a606396017e1fb72c3f7ff004e81cbda9c3f7a05",
+  "action" : "trade"
+}
+
+[{
+  "carrier_operator" : "中国电信",
+  "packages":"169套餐",
+  "carrier_account" : "123456",
+  "carrier_password":"1112222"
+},{
+  "carrier_operator" : "中国联通",
+  "packages":"133套餐",
+  "carrier_account" : "123456",
+  "carrier_password":"1112222"
+}]
+
+
+
+{
+  "password" : "111111",
+  "stu_no" : "000020300032",
+  "device_id" : "H62011",
+  "msg" : "希望尽快处理",
+  "desc" : "设备漏水",
+  "type" : "1",
+  "t" : "1439825959",
+  "n" : "f0bdff",
+  "sign" : "a606396017e1fb72c3f7ff004e81cbda9c3f7a05",
+  "action" : "feedback"
+}
+$student_no, $msg, $device_id, $desc,$type
+
+get_card_transaction($student_no,$token,$page_index=1, $page_szie=10, $begin_date=0, $end_date=0)
+
+
+
+
+{resp_code:0,resp_desc:"",data:{
+            "studentNo" : "1234",
+            "cardNo" : "1234",
+            "userName" :"张三",
+            "nickName" : "zhangsan",
+            "headImg" : "http://img1.cache.netease.com/catchpic/A/A9/A903DF915B29F447C601E5E5214DF027.jpg",
+            "phone" : "13900000000",
+            "email" :"xw@mail.com",
+            "cardBalance" : 2320,
+            "monthlyAmt" : 5427,
+            "sex":"1",
+            "department":"外国语学院",
+            "school_zone":"东区",
+            "from":"四川成都",
+            "graduated":"石室中学",
+            "home_address":"成都锦江区",
+            "nation":"汉",
+            "carrier_account":[{
+  "carrier_operator" : "中国电信",
+  "packages":"169套餐",
+  "carrier_account" : "123456",
+  "carrier_password":"1112222"
+},{
+  "carrier_operator" : "中国联通",
+  "packages":"133套餐",
+  "carrier_account" : "123456",
+  "carrier_password":"1112222"
+}],
+            "wash_setting":{},
+            "wash_setting2":{},
+            "wash_setting3":{}
+            }
+        }
