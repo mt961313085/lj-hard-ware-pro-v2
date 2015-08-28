@@ -47,5 +47,7 @@ foreach( $res[0] as $k => $v ) {
 
 $db->close();
 
+echo empty(NULL)."------------".count(NULL)."\r\n";
 //var_dump( array_fill(0,16,0) );
+
 ?>

@@ -27,7 +27,8 @@
 	
 	//pro_dev_state( '001', '1A01C' );
 	//echo decode_dev_id('001012')."\r\n";
-	//exit;
+	check_db( ['001','002'] );
+	exit;
 	
 	$l_ip = $config['ip'];
 	$l_port = $config['port'];
@@ -105,7 +106,8 @@
 		echo "\t\tsockets num:".count($sock_ids)."\r\n";
 		
 		// 根据socket,检查是否有指令需要发送（实际发送控制指令）
-			
+		
+		
 		// 每5秒轮询数据表（实际发送控制指令）
 		if( (time()-$check_db_t)>=5 ) {
 			$check_db_t = time();
