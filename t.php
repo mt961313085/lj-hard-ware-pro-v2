@@ -30,6 +30,12 @@ $config['dbpwd'] = 'blue';
 $config['database'] = 'school_device_db';
 
 $db = new db( $config );
+
+$db->free_result();
+
+$data = array('dev_state'=>3,'open_t'=>123);
+$db->update( 'devices', $data, 'dev_id=00102' );
+
 $res = $db->get_all( 'select * from devices' );
 
 echo count($res)."\r\n";
@@ -39,8 +45,7 @@ foreach( $res[0] as $k => $v ) {
 	
 }
 
-$db->free_result();
 $db->close();
 
-var_dump( array_fill(0,16,0) );
+//var_dump( array_fill(0,16,0) );
 ?>

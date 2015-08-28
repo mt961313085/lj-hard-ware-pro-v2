@@ -1,10 +1,9 @@
 <?php
 /*
-	web端指令格式为：[web,timestamp,operate,locate]
-	operate - CLOSE、OPEN
-	locate - ‘build-roomid’
+	web端指令格式为：[web,timestamp,operate,dev_id]
+	其中，OPEN CLOSE操作已经事先写入数据库中
 	
-	收到web端指令，立即返回 [web, timestamp(同收到的指令), operate, GOT]
+	收到web端指令，立即返回 [web, timestamp(同收到的指令), GOT]
 */
 	require_once( 'config.php' );
 	require_once( 'net_pro.php' );
@@ -12,7 +11,7 @@
 	class sock_info {
 		public $sock = -1;
 		public $lt = 0;
-		public $c_id = '';					// 控制板编号, 或服务器连接编号
+		public $id = '';					// 控制板编号, 或服务器连接编号
 	}
 	
 	class order {
@@ -20,16 +19,15 @@
 		public $t = 0;
 		public $op = '';
 		public $state = '';
-		public $locate = '';
+		public $dev_id = '';
 	}
 	
 	pcntl_signal( SIGCHLD, SIG_IGN );
 	date_default_timezone_set( 'Asia/Chongqing' );
-
-		
-	pro_dev_state( '001', '1A01C' );
+	
+	//pro_dev_state( '001', '1A01C' );
 	//echo decode_dev_id('001012')."\r\n";
-	exit;
+	//exit;
 	
 	$l_ip = $config['ip'];
 	$l_port = $config['port'];
@@ -48,13 +46,13 @@
 	echo "hareware_server is running!\t\t".date("Y-m-d H:i:s")."\r\n";
 	
 	$sock_ids = array();								// 对应每个连接进来的 sock
-	$order_chain = array();								// 对应每个解码成功的指令
+	$check_db_t = 0;
 	
     while(TRUE) {
 		
 		$read = gen_sock_chain( $sock_ids, $sock );
 		
-        if( socket_select($read, $write=NULL, $except=NULL, NULL)<1 )
+        if( socket_select($read, $write=NULL, $except=NULL, 5)<1 )
             continue;
 		
         if( in_array($sock, $read) ) {
@@ -83,76 +81,41 @@
                 continue;
             }
 			else {
-				if( !empty( $data ) ) {
-					if( empty($sock_ids[$key]->recv) )
-						$sock_ids[$key]->recv = $data;
-					else
-						$sock_ids[$key]->recv .= $data;	
-					
+				if( !empty( $data ) ) {				
+					//echo "e1-\tclient send: ".$data."\t".date("Y-m-d H:i:s")."\r\n";
 					// 处理接收到的指令
-					$one_client_order = decode_order( $data );
-					foreach( $one_client_order as $k => $v ) {
-						if( $v->id=='web' ) {							// 来自服务器,立即回复
-							$buff = "[web,".$v->t.",".$v->op.",GOT]";
-							socket_write( $read_sock, $buff );
-							
-							if( $v->op!='OPEN' && $v->op!='CLOSE' )
-								unset( $one_client_order[$k] );	
-							
-						}
-						else {					// 处理来自硬件的反馈数据(指令反馈、心跳、读状态)
-							$buff = '';
-							switch($v->op) {
-								case '6':			// 设备心跳
-								case '3':			// 控制指令返回
-									unset( $one_client_order[$k] );	
-									break;
-								
-								case '0':			// 设备请求读状态,返回[id,1,xxxxC]
-									$buff = "[".$v->id.",1,0000C]";
-									unset( $one_client_order[$k] );
-									break;
-								
-								case '4':			// 开箱异常,返回[ID,5,AAAAC]
-									$buff = "[".$v->id.",5,AAAAC]";
-									unset( $one_client_order[$k] );	
-									break;
-								
-								default:
-									unset( $one_client_order[$k] );	
-									break;
-							}
-							
-							if( !empty($buff) )
-								socket_write( $read_sock, $buff );
-						}
+					$one_client_order = decode_order( $data );	
+					
+					if( empty($sock_ids[$key]->id) ) {				// 表明此socket是第一次发送数据
+						$sock_ids[$key]->id = $one_client_order[0]->id;
+						$sock_ids[$key]->sock = $read_sock;
 					}
-					
-					$order_chain = array_merge( $order_chain, $one_client_order );
-					
-					//echo "e1-\tclient send: ".$ds[$k2]."\t".date("Y-m-d H:i:s")."\r\n";
+												
+					pro_ins( $one_client_orde, $read_sock );				
+					unset( $one_client_order );
 				}
 				else {
-					// 添加数据处理
 					socket_close( $read_sock );
 					unset( $sock_ids[$key] );
-				}
-					
+				}	
 			}
 			
 		}			
 		
 		echo "\t\tsockets num:".count($sock_ids)."\r\n";
 		
-		// 统一处理设备控制指令（实际发送控制指令）
+		// 根据socket,检查是否有指令需要发送（实际发送控制指令）
 			
-		// 轮询数据表（实际发送控制指令）
+		// 每5秒轮询数据表（实际发送控制指令）
+		if( (time()-$check_db_t)>=5 ) {
+			$check_db_t = time();
+			// 检查全部数据库	
+		}
 		
 		// 检查清理 socket 超时（不操作数据库，不发送指令）
 		clear_timeout_socket( $sock_ids );
 		echo "\t\tafer clear sockets num:".count(sock_ids)."\r\n";
-		
-		$order_chain = [];
+
 	}
 	
 	socket_close( $sock );

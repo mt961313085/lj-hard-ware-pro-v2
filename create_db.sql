@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS school_device_db.devices (
 	`student_no` 	INT(11) NOT NULL default -1,			/* 当前占用设备学生号， -1-未占用			*/
 	`order`			VARCHAR(12) NOT NULL DEFAULT 'NONE',	/* 当前设备控制指令，OPEN, 	CLOSE			*/
 	`order_recv_t` 	BIGINT NOT NULL DEFAULT 0,				/* 收到指令时的UTC时间戳					*/
+	`order_send_t` 	BIGINT NOT NULL DEFAULT 0,	
 
 	`open_t` 		BIGINT NOT NULL DEFAULT 0,				/* 设备开启时间								*/
 	`close_t` 		BIGINT NOT NULL DEFAULT 0,				/* 设备关闭时间								*/
