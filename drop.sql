@@ -1,0 +1,1 @@
+DROP DATABASE school_device_db;
