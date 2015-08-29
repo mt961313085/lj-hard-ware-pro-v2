@@ -31,6 +31,9 @@ $config['database'] = 'school_device_db';
 
 $db = new db( $config );
 
+$res = $db->get_all( 'select distinct ctrl from devices' );
+var_dump( $res );
+/*
 $db->free_result();
 
 $data = array('dev_state'=>3,'open_t'=>123);
@@ -44,10 +47,8 @@ foreach( $res[0] as $k => $v ) {
 	echo "$k-------$v----\r\n";
 	
 }
+*/
 
 $db->close();
-
-echo empty(NULL)."------------".count(NULL)."\r\n";
-//var_dump( array_fill(0,16,0) );
 
 ?>

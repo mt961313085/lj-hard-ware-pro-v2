@@ -21,6 +21,17 @@
 		}	
 	}
 	
+	// $ctrl - 控制板唯一编号
+	// 返回找到的 sock，否则返回空
+	function search_sock_with_ctrl( $sock_ids, $ctrl ) {
+		$res = -1;
+		foreach( $sock_ids as $k => $v ) {
+			if( $v->id==$ctrl )
+				return $v->sock;
+		}
+		return NULL;
+	}
+	
 	// 解码单条指令，指令格式为[XX,XX,XX,XX]
 	function decode_order( $order ) {
 		$z = '/\[[^\]]*\]/';
@@ -79,15 +90,24 @@
 	}
 	
 	// 处理来自一个web或硬件连接的请求
+	// 返回需要操作的控制板号
 	function pro_ins( $one_client_orde, $read_sock ) {
-
+		
+		$ctrl_ids = array();
+		
 		foreach( $one_client_order as $k => $v ) {
 			if( $v->id=='web' ) {							// 来自服务器,立即回复
 				$buff = "[web,".$v->t.",GOT]";
 				socket_write( $read_sock, $buff );
-			
-				// 如果需要，添加服务器读设备状态代码
 				
+				// 记录需要操作的设备编号
+				// 如果需要，添加服务器读设备状态代码
+				switch( $one_client_orde->op ) {
+					case 'OPEN':
+					case 'CLOSE':
+						$ctrl_ids[] = substr( $one_client_orde->dev_id, 0, 3 );
+						break;
+				}
 			}
 			else {					// 处理来自硬件的反馈数据(指令反馈、心跳、读状态)
 				
@@ -96,6 +116,7 @@
 					case '6':			// 设备心跳
 					case '3':			// 控制指令返回
 						set_dev_state( $v->id, $v->state );
+						$ctrl_ids[] = $v->id;
 						break;
 					
 					case '0':			// 设备请求读状态,返回[id,1,xxxxC](未完成)
@@ -114,6 +135,7 @@
 					socket_write( $read_sock, $buff );
 			}
 		}
+		return $ctrl_ids;
 	}
 //------------------------------------------------------------------------------------
 // 							数据库相关操作
@@ -146,21 +168,30 @@
 		$res = $db->get_all( "SELECT * FROM devices WHERE ctrl='$dev_id'" );
 		
 		foreach( $res as $k => $v ) {
-			$d_id = decode_dev_id( $v['dev_id'] );
+			$d_id = decode_dev_id( $v['dev_id'] );		// 设备在控制器内的id 
 			$cur_state = $st[$d_id-1];					// 最新设备状态
 			
 			$con = "dev_id='".$v['dev_id']."'";
-			$data = array( 'dev_state'=>$cur_state );
+			$data = array( 'dev_state'=>$cur_state, 'state_recv_t'=>time() );
 			
 			switch( $cur_state ) {
 				case '0':
-					if( $v['dev_state']==1 )		
-						$db->update( 'devices', $data, $con );
+					if( $v['dev_state']==1 && $v['student_no']!=-1 && $v['order']=='CLOSE' && $v['close_t']==0 )
+						$data['close_t'] = time();
+					$db->update( 'devices', $data, $con );
 					break;
 				
 				case '1':
-					if( $v['dev_state']==0 )
-						$db->update( 'devices', $data, $con );
+					if( $v['dev_state']==0 && $v['order']=='OPEN' && $v['student_no']!=-1 ) {
+						if( $v['open_t']==0 )
+							$data['open_t'] = time();
+						elseif( $v['close_t']>0 ) {				// 计算中断时间
+							$data['break_t'] = time() - $v['close_t'] + $v['break_t'];
+							$data['close_t'] = 0; 
+						}	
+					}
+						
+					$db->update( 'devices', $data, $con );
 					break;
 			}
 		}
@@ -174,16 +205,24 @@
 	// 为空，则遍历全部设备
 	function check_db( $dev_ids ) {
 		
-		global $config;
+		global $config, $sock_ids;
+		
 		$db = new db( $config );
 		
 		$dev_ids = array_unique( $dev_ids );
 		
+		$timeout_check = 0;
+		
 		if( count($dev_ids)==0 ) {			// 遍历全部设备
-			
-			
+			$timeout_check = 1;
+			$mid = $db->get_all( 'select distinct ctrl from devices' );
+			$dev_id = array();
+			foreach( $mid as $v ) {
+				$dev_id[] = $v;
+			}
 		}
-		else {									// 仅遍历指定设备
+		
+		if(  count($dev_ids)>0 ) {									// 遍历指定设备
 			$sql = 'SELECT * FROM devices WHERE ';
 			foreach( $dev_ids as $v ) {			// 以ctrl为单位遍历设备
 				$sql_in = $sql."ctrl='$v'";
@@ -191,23 +230,37 @@
 				
 				$res = $db->get_all( $sql_in );
 				$need_ctrl = 0;
+					
 				foreach( $res as $v2 ) {
 					
 					$d_id = decode_dev_id( $v2['dev_id'] ) - 1;  // 设备在控制器上的id，从1开始编号，共16个
 
 					if( $v2['order']=='OPEN' )
 						$ins[$d_id] = 1;
+					
+					if( $timeout_check==1 && (time()-$v['state_recv_t'])>30 ) {		// 如需要，首先进行设备连接中断处理
+	
+						if( $v2['student_no']!=-1 && $v2['open_t']>0 ) {
+							// 产生计费， 关闭时间为 time()-30（未完成）
+						}
 						
+						// 恢复设备至未占用状态
+						$data = array('student_no'=>-1,'order'=>'NONE','order_recv_t'=>0,'order_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+						$db->update( 'devices', $data, $con );
+					}
+				
 					$need_ctrl = $need_ctrl || pro_dev_work( $v2, $db );
 				}
-				
-				$ins = strrev( implode('',$ins) );
-				echo ($need_ctrl*1)."-------$ins\r\n";
-				
+								
 				if( $need_ctrl ) {						// 需要控制
-					//$ins = strrev( implode('',$ins) );
-					// 根据 $v2['ctrl'] 查找 socket
-					
+					$ins = strrev( implode('',$ins) );
+					$buff = sprintf( "[$v,2,%04XC]", bindec( $ins ) );
+					echo "-----$ins------$buff\r\n";
+					// 根据 ctrl 查找 socket
+					$socket = search_sock_with_ctrl( $sock_ids, $v );
+					if( !empty($socket) ) {
+						socket_write( $socket, $buff );
+					}
 				}
 			}
 		}
@@ -261,21 +314,38 @@
 			default:
 				switch( $rec['order'] ) {
 					case 'OPEN':
-						if( $rec['dev_state']==0 ) {
-							if( (time()-$rec['order_recv_t'])<=15 ) {
-								if( (time()-$rec['order_send_t'])>=5 ) {
-									$need_ctrl = 1;
-									$data = array( 'order_send_t'=>time() );
+						if( $rec['dev_state']==0 ) {									// 中断计时，首次开启功能，逻辑复杂
+							
+							if( $rec['open_t']==0 ) {
+								if( (time()-$rec['order_recv_t'])<=15 ) {
+									if( (time()-$rec['order_send_t'])>=5 ) {
+										$need_ctrl = 1;
+										$data = array( 'order_send_t'=>time() );
+										$db->update( 'devices', $data, $con );
+									}
+								}
+								else {					// 超时			
+									// 恢复设备至未占用状态
+									$data = array('student_no'=>-1,'order'=>'NONE','order_recv_t'=>0,'order_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+									$db->update( 'devices', $data, $con );
+								}	
+							}
+							else {						// open_t>0  开启后又异常中断
+								if( $rec['close_t']<=0 ) {
+									$data = array( 'close_t'=>time() );
 									$db->update( 'devices', $data, $con );
 								}
+								else {
+									if( (time()-$rec['close_t'])>30 ) {
+										// 产生计费 关闭时间为 close_t (未完成)
+										
+										// 恢复设备至未占用状态
+										$data = array('student_no'=>-1,'order'=>'NONE','order_recv_t'=>0,'order_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+										$db->update( 'devices', $data, $con );
+									}
+								}
 							}
-							else {					// 超时
-								// 产生计费 关闭时间为 time()-15 (未完成)
-								
-								// 恢复设备至未占用状态
-								$data = array('student_no'=>-1,'order'=>'NONE','order_recv_t'=>0,'order_send_t'=>0,'open_t'=>0,'close_t'=>0,'remark'=>'');
-								$db->update( 'devices', $data, $con );
-							}	
+
 						}
 						else {					// dev_state==1
 							if( (time()-$rec['open_t'])>=$rec['pre_close_t'] ) {	// 开启时间超过最大允许开启时间
@@ -291,7 +361,7 @@
 							// 产生计费，close_t - open_t(未完成)
 							
 							// 恢复设备至未占用状态
-							$data = array('student_no'=>-1,'order'=>'NONE','order_recv_t'=>0,'order_send_t'=>0,'open_t'=>0,'close_t'=>0,'remark'=>'');
+							$data = array('student_no'=>-1,'order'=>'NONE','order_recv_t'=>0,'order_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 							$db->update( 'devices', $data, $con );
 						}
 						else {
@@ -307,7 +377,7 @@
 								// 产生计费 关闭时间为 order_recv_t (未完成)
 								
 								// 恢复设备至未占用状态
-								$data = array('student_no'=>-1,'order'=>'NONE','order_recv_t'=>0,'order_send_t'=>0,'open_t'=>0,'close_t'=>0,'remark'=>'');
+								$data = array('student_no'=>-1,'order'=>'NONE','order_recv_t'=>0,'order_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 								$db->update( 'devices', $data, $con );
 							}
 						}

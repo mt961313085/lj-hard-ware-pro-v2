@@ -27,8 +27,8 @@
 	
 	//pro_dev_state( '001', '1A01C' );
 	//echo decode_dev_id('001012')."\r\n";
-	check_db( ['001','002'] );
-	exit;
+	//check_db( ['001','002'] );
+	//exit;
 	
 	$l_ip = $config['ip'];
 	$l_port = $config['port'];
@@ -50,6 +50,8 @@
 	$check_db_t = 0;
 	
     while(TRUE) {
+		
+		$dev_ids = array();					// 记录此次接收到的所有控制指令涉及的控制板id
 		
 		$read = gen_sock_chain( $sock_ids, $sock );
 		
@@ -92,7 +94,7 @@
 						$sock_ids[$key]->sock = $read_sock;
 					}
 												
-					pro_ins( $one_client_orde, $read_sock );				
+					$dev_ids[] = pro_ins( $one_client_orde, $read_sock );				
 					unset( $one_client_order );
 				}
 				else {
@@ -105,13 +107,16 @@
 		
 		echo "\t\tsockets num:".count($sock_ids)."\r\n";
 		
-		// 根据socket,检查是否有指令需要发送（实际发送控制指令）
-		
+		// 处理web控制指令、硬件心跳、控制返回（实际发送控制指令）
+		$dev_ids = array_unique( $dev_ids );
+		if( count($dev_ids)>0 )
+			check_db( $dev_ids );
 		
 		// 每5秒轮询数据表（实际发送控制指令）
 		if( (time()-$check_db_t)>=5 ) {
 			$check_db_t = time();
-			// 检查全部数据库	
+			// 检查全部数据库
+			check_db( [] );			
 		}
 		
 		// 检查清理 socket 超时（不操作数据库，不发送指令）
