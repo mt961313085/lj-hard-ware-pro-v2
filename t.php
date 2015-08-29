@@ -50,5 +50,5 @@ foreach( $res[0] as $k => $v ) {
 */
 
 $db->close();
-
+echo time();
 ?>

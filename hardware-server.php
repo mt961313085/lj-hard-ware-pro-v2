@@ -25,11 +25,6 @@
 	pcntl_signal( SIGCHLD, SIG_IGN );
 	date_default_timezone_set( 'Asia/Chongqing' );
 	
-	//pro_dev_state( '001', '1A01C' );
-	//echo decode_dev_id('001012')."\r\n";
-	//check_db( ['001','002'] );
-	//exit;
-	
 	$l_ip = $config['ip'];
 	$l_port = $config['port'];
 	
@@ -55,8 +50,7 @@
 		
 		$read = gen_sock_chain( $sock_ids, $sock );
 		
-        if( socket_select($read, $write=NULL, $except=NULL, 5)<1 )
-            continue;
+        socket_select( $read, $write=NULL, $except=NULL, 5 );
 		
         if( in_array($sock, $read) ) {
             $mid = new sock_info();
@@ -94,7 +88,7 @@
 						$sock_ids[$key]->sock = $read_sock;
 					}
 												
-					$dev_ids[] = pro_ins( $one_client_orde, $read_sock );				
+					$dev_ids = pro_ins( $one_client_order, $read_sock );				
 					unset( $one_client_order );
 				}
 				else {
@@ -104,25 +98,27 @@
 			}
 			
 		}			
-		
-		echo "\t\tsockets num:".count($sock_ids)."\r\n";
-		
+				
 		// 处理web控制指令、硬件心跳、控制返回（实际发送控制指令）
+		// 不进行数据库内，硬件连接超时处理
 		$dev_ids = array_unique( $dev_ids );
 		if( count($dev_ids)>0 )
 			check_db( $dev_ids );
 		
 		// 每5秒轮询数据表（实际发送控制指令）
+		// 进行数据库内，硬件连接超时处理
 		if( (time()-$check_db_t)>=5 ) {
 			$check_db_t = time();
+			echo "check_db every 5s - ".time()."\r\n";
 			// 检查全部数据库
-			check_db( [] );			
+			$s1 = time();
+			check_db( [] );
+			echo "use: ".(time()-$s1)."\r\n";
 		}
 		
 		// 检查清理 socket 超时（不操作数据库，不发送指令）
 		clear_timeout_socket( $sock_ids );
-		echo "\t\tafer clear sockets num:".count(sock_ids)."\r\n";
-
+		//echo "\t\tafter clear sockets num:".count($sock_ids)."\r\n";
 	}
 	
 	socket_close( $sock );

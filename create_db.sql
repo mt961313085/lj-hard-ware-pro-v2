@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS school_device_db.devices (
 
 	`price`			DOUBLE NOT NULL,						/* 单价：分/秒								*/
 	`student_no` 	INT(11) NOT NULL default -1,			/* 当前占用设备学生号， -1-未占用			*/
-	`order`			VARCHAR(12) NOT NULL DEFAULT 'NONE',	/* 当前设备控制指令，OPEN, 	CLOSE			*/
-	`order_recv_t` 	BIGINT NOT NULL DEFAULT 0,				/* 收到指令时的UTC时间戳					*/
-	`order_send_t` 	BIGINT NOT NULL DEFAULT 0,	
+	`ins`			VARCHAR(12) NOT NULL DEFAULT 'NONE',	/* 当前设备控制指令，OPEN, 	CLOSE			*/
+	`ins_recv_t` 	BIGINT NOT NULL DEFAULT 0,				/* 收到指令时的UTC时间戳					*/
+	`ins_send_t` 	BIGINT NOT NULL DEFAULT 0,	
 	
 	`break_t` 		BIGINT NOT NULL DEFAULT 0,				/* 设备使用时中断时间						*/
 	`open_t` 		BIGINT NOT NULL DEFAULT 0,				/* 设备开启时间								*/
@@ -38,11 +38,23 @@ CREATE TABLE IF NOT EXISTS school_device_db.fee_record (
 	PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00101', 'shower', 'H1-412', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00102', 'shower', 'H1-413', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00103', 'shower', 'H1-414', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00104', 'shower', 'H1-415', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00105', 'shower', 'H1-416', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00106', 'shower', 'H1-417', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00107', 'shower', 'H1-418', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00108', 'shower', 'H1-419', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00109', 'shower', 'H1-420', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00110', 'shower', 'H1-421', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00111', 'shower', 'H1-422', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00112', 'shower', 'H1-423', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00113', 'shower', 'H1-424', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00114', 'shower', 'H1-425', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00115', 'shower', 'H1-426', '001', 30 );
+INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00116', 'shower', 'H1-427', '001', 30 );
 
-INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00102', 'shower', 'H1-412', '001', 30 );
-INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00103', 'shower', 'H1-413', '001', 30 );
-INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00106', 'shower', 'H1-416', '001', 30 );
-INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00110', 'shower', 'H1-418', '001', 30 );
 
 INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00203', 'shower', 'H1-713', '002', 30 );
 INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00204', 'shower', 'H1-717', '002', 30 );
