@@ -1,6 +1,8 @@
 <?php
 	require_once( 'db.php' );
 	
+	$T_OUT = 20;		// 指令重发超时设置
+	
 	// 形成用于select的 socket 链
 	function gen_sock_chain( $sock_ids, $socket ) {
 		$res = array();	
@@ -104,10 +106,10 @@
 				
 				// 记录需要操作的设备编号
 				// 如果需要，添加服务器读设备状态代码
-				switch( $one_client_order->op ) {
+				switch( $v->op ) {
 					case 'OPEN':
 					case 'CLOSE':
-						$ctrl_ids[] = substr( $one_client_order->dev_id, 0, 3 );
+						$ctrl_ids[] = substr( $v->dev_id, 0, 3 );
 						break;
 				}
 			}
@@ -219,12 +221,12 @@
 		if( count($dev_ids)==0 ) {			// 遍历全部设备
 			$timeout_check = 1;
 			$mid = $db->get_all( 'select distinct ctrl from devices' );
-			$dev_id = array();
+			$dev_ids = array();
 			foreach( $mid as $v ) {
-				$dev_id[] = $v;
+				$dev_ids[] = $v['ctrl'];
 			}
 		}
-		
+
 		if(  count($dev_ids)>0 ) {									// 遍历指定设备
 			$sql = 'SELECT * FROM devices WHERE ';
 			foreach( $dev_ids as $v ) {			// 以ctrl为单位遍历设备
@@ -241,15 +243,20 @@
 					if( $v2['ins']=='OPEN' )
 						$ins[$d_id] = 1;
 					
-					if( $timeout_check==1 && (time()-$v['state_recv_t'])>30 ) {		// 如需要，首先进行设备连接中断处理
-	
-						if( $v2['student_no']!=-1 && $v2['open_t']>0 ) {
+					// 仅处理设备断线，心跳超时情况的处理
+					if( $timeout_check==1 && (time()-$v2['state_recv_t'])>=30 ) {		// 如需要，首先进行设备连接中断处理
+											
+						if( $v2['student_no']!=-1 ) {
+							
+							// 恢复设备至未占用状态
+							$con = "dev_id='".$v2['dev_id']."'";
+							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+							$db->update( 'devices', $data, $con );
+										
 							// 产生计费， 关闭时间为 time()-30（未完成）
+							if( $v2['open_t']>0 )
+								echo "\tfee-1: dev_id-".$v2['dev_id']."  open_t-".$v2['open_t']."  close_t-".(time()-30)."  ".time()."\r\n";
 						}
-						
-						// 恢复设备至未占用状态
-						$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
-						$db->update( 'devices', $data, $con );
 					}
 				
 					$need_ctrl = $need_ctrl || pro_dev_work( $v2, $db );
@@ -276,6 +283,8 @@
 	// 如果需要发送指令,返回 1; 否则返回0
 	function pro_dev_work( $rec, $db ) {
 		
+		global $T_OUT;
+		
 		$need_ctrl = 0;
 		$con = "dev_id='".$rec['dev_id']."'";
 		
@@ -296,7 +305,7 @@
 							$db->update( 'devices', array('ins_recv_t'=>time(),'ins_send_t'=>time()), $con );
 						}
 						else {
-							if( (time()-$rec['ins_recv_t'])<=15 ) {
+							if( (time()-$rec['ins_recv_t'])<=$T_OUT ) {
 								if( (time()-$rec['ins_send_t'])>=5 ) {
 									$data = array( 'ins_send_t'=>time() );
 									$db->update( 'devices', $data, $con );
@@ -319,7 +328,7 @@
 					case 'OPEN':
 						if( $rec['dev_state']==0 ) {									// 中断计时，首次开启功能，逻辑复杂
 							if( $rec['open_t']==0 ) {
-								if( (time()-$rec['ins_recv_t'])<=15 ) {
+								if( (time()-$rec['ins_recv_t'])<=$T_OUT ) {
 									if( (time()-$rec['ins_send_t'])>=5 ) {
 										$need_ctrl = 1;
 										$data = array( 'ins_send_t'=>time() );
@@ -339,12 +348,17 @@
 									$db->update( 'devices', $data, $con );
 								}
 								else {
-									if( (time()-$rec['close_t'])>30 ) {
-										// 产生计费 关闭时间为 close_t (未完成)
+									// 仅处理设备正常发送心跳，但控制状态不对的情况处理
+									if( (time()-$rec['close_t'])>30 && (time()-$rec['state_recv_t'])<30 ) {
 										
 										// 恢复设备至未占用状态
 										$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 										$db->update( 'devices', $data, $con );
+										
+										
+										// 产生计费 关闭时间为 close_t (未完成)
+										echo "\tfee-2: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['close_t']."  ".time()."\r\n";
+										
 									}
 								}
 							}
@@ -361,15 +375,20 @@
 					
 					case 'CLOSE':
 						if( $rec['dev_state']==0 ) {
-							// 产生计费，close_t - open_t(未完成)
 							
 							// 恢复设备至未占用状态
 							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 							$db->update( 'devices', $data, $con );
+							
+							// 产生计费，close_t - open_t(未完成)
+							// 仅处理硬件设备正常连接时的费用处理
+							if( (time()-$rec['state_recv_t'])<30 ) {
+								echo "\t\tfee-3: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['close_t']."\r\n";
+							}
 						}
 						else {
 							
-							if( (time()-$rec['ins_recv_t'])<=15 ) {
+							if( (time()-$rec['ins_recv_t'])<=$T_OUT ) {
 								if( (time()-$rec['ins_send_t'])>=5 ) {
 									$need_ctrl = 1;
 									$data = array( 'ins_send_t'=>time() );
@@ -377,11 +396,16 @@
 								}
 							}
 							else {					// 超时
-								// 产生计费 关闭时间为 ins_recv_t (未完成)
-								
+							
 								// 恢复设备至未占用状态
 								$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 								$db->update( 'devices', $data, $con );
+								
+								// 产生计费 关闭时间为 ins_recv_t (未完成)
+								// 仅处理硬件设备正常连接时的费用处理
+								if( (time()-$rec['state_recv_t'])<30 ) {
+									echo "\t\tfee-4: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['ins_recv_t']."\r\n";
+								}
 							}
 						}
 						break;

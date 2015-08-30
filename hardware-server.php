@@ -27,7 +27,7 @@
 	
 	$l_ip = $config['ip'];
 	$l_port = $config['port'];
-	
+		
 	$sock = socket_create( AF_INET, SOCK_STREAM, 0 );
 	socket_set_option( $sock, SOL_SOCKET, SO_RCVTIMEO, array("sec"=>10, "usec"=>0 ) );
 	socket_set_option( $sock, SOL_SOCKET, SO_SNDTIMEO, array("sec"=>3, "usec"=>0 ) );
@@ -102,8 +102,10 @@
 		// 处理web控制指令、硬件心跳、控制返回（实际发送控制指令）
 		// 不进行数据库内，硬件连接超时处理
 		$dev_ids = array_unique( $dev_ids );
-		if( count($dev_ids)>0 )
+		if( count($dev_ids)>0 ) {
+			echo "\t\t\t\tcheck_db when ins recvied!\r\n";
 			check_db( $dev_ids );
+		}
 		
 		// 每5秒轮询数据表（实际发送控制指令）
 		// 进行数据库内，硬件连接超时处理
@@ -113,7 +115,8 @@
 			// 检查全部数据库
 			$s1 = time();
 			check_db( [] );
-			echo "use: ".(time()-$s1)."\r\n";
+			if( (time()-$s1)>0.5 )
+				echo "use: ".(time()-$s1)."\r\n";
 		}
 		
 		// 检查清理 socket 超时（不操作数据库，不发送指令）

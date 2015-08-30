@@ -59,7 +59,9 @@
 						
 						if( $op_id==2 ) {
 							$state = strtok ( "[,] \r\n" );
-							$state = '0000c';
+							
+							$state = '0000c';	// 用于测试重发功能
+							
 							$buff = "[001,3,$state]";
 							echo "recv:  ".time()."    $data     send: $buff\r\n";
 							socket_write( $read[0], $buff );
