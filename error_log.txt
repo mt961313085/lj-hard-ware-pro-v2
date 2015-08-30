@@ -4,3 +4,21 @@ case-001 was online at	2015-08-30 17:58:50
 case-001 was online at	2015-08-30 17:58:54
 	case-001 was offline normally at	2015-08-30 17:58:59
 case-001 was online at	2015-08-30 17:59:00
+case-001 was online at	2015-08-30 20:03:02
+case-001 was online at	2015-08-30 20:03:59
+case-web was online at	2015-08-30 20:04:43
+	case-web was offline normally at	2015-08-30 20:04:43
+case-001 was online at	2015-08-30 20:06:57
+case-web was online at	2015-08-30 20:07:01
+	case-web was offline normally at	2015-08-30 20:07:01
+case-001 was online at	2015-08-30 20:08:02
+case-web was online at	2015-08-30 20:08:03
+	case-web was offline normally at	2015-08-30 20:08:03
+case-web was online at	2015-08-30 20:08:25
+	case-web was offline normally at	2015-08-30 20:08:25
+case-web was online at	2015-08-30 20:08:53
+	case-web was offline normally at	2015-08-30 20:08:53
+case-web was online at	2015-08-30 20:09:20
+	case-web was offline normally at	2015-08-30 20:09:20
+case-001 was online at	2015-08-30 20:12:10
+	case-001 was offline normally at	2015-08-30 20:13:18

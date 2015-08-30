@@ -7,7 +7,7 @@ $config['dbpwd'] = 'blue';
 $config['database'] = 'school_device_db';
 
 $db = new db( $config );
-
+/*
 // 测试 00101 00106 设备开, 30s 后关
 // 不用开启硬件仿真终端，或硬件仿真终端进行指令正确响应
 echo "OPEN dev-00101\r\n";
@@ -46,7 +46,7 @@ foreach( $res as $v0 ) {
 	}
 	echo "\r\n";
 }
-
+*/
 
 /*
 // 测试 00102 设备开，并且进入三次重发
@@ -65,7 +65,7 @@ foreach( $res as $v0 ) {
 	}
 	echo "\r\n";
 }
-
+*/
 
 /*
 // 测试 00103 设备正确开启，然后硬件异常关闭
@@ -85,10 +85,11 @@ foreach( $res as $v0 ) {
 }
 */
 
-/*
+
 // 测试 00104 设备关闭，但状态为1，且硬件设备心跳超时
 // 不开启硬件仿真终端程序
 // 正常表现: 发送3次关闭指令，然后恢复为未占用模式，但设备状态为1；
+//			触发 fee-4 计费;
 //			系统再次重发几次关闭指令，然后将设置 remark=‘err’，标识设备故障
 echo "CLOSE dev-00104 and dev_state always 1 \r\n";
 $data = array( 'student_no'=>2, 'ins'=>'CLOSE', 'dev_state'=>1, 'open_t'=>time(), 'ins_recv_t'=>time(), 'ins_send_t'=>0, 'state_recv_t'=>time() );
@@ -102,7 +103,7 @@ foreach( $res as $v0 ) {
 	}
 	echo "\r\n";
 }
-*/
+
 $db->close();
 
 //-------------------------------------------------------------------------------

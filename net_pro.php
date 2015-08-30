@@ -1,7 +1,7 @@
 <?php
 	require_once( 'db.php' );
 	
-	$T_OUT = 20;		// 指令重发超时设置
+	$T_OUT = 16;		// 指令重发超时设置
 	
 	// 形成用于select的 socket 链
 	function gen_sock_chain( $sock_ids, $socket ) {
@@ -173,6 +173,49 @@
 		return $st;
 	}
 	
+	// 生成收费记录
+	// $info - 用于计算费用的所有信息，关联数组类型
+	// $type -用于记录生成此费用的途径，取值为 fee-1  fee-2  fee-3   fee-4
+	// $type 用于确定 close_t， 并且用于调试
+	function gen_fee_record( $info, $type ) {
+		global $config;
+		
+		$db = new db( $config );
+		$data = array( 'price'=>$info['price'], 'student_no'=>$info['student_no'], 'dev_id'=>$info['dev_id'], 'open_t'=>$info['open_t'] );
+		$data['break_t'] = $info['break_t'];
+		$data['fee_type'] = $type;
+		
+		switch( $type ) {
+			case 'fee-1':			// 关闭时间为 time()-30
+				$data['close_t'] = time() - 30;
+				break;
+			
+			case 'fee-2':			// 关闭时间为 close_t
+			case 'fee-3':
+				$data['close_t'] = $info['close_t'];
+				break;
+			
+			case 'fee-4':			// 关闭时间为 ins_recv_t
+				$data['close_t'] = $info['ins_recv_t'];
+				break;
+			
+			default:
+				$db->close();
+				return 0;
+		}
+		
+		$data['sum_t'] = $data['close_t'] - $data['open_t'] - $data['break_t'];
+		$data['fee'] = $data['price'] * $data['sum_t'];
+		
+		if( $data['fee']>0 )	
+			$db->insert( 'fee_record', $data );
+		
+		$db->free_result();
+		$db->close();
+		
+		return 1;
+	}
+	
 	// 更新控制板 $dev_id 上设备状态
 	function set_dev_state( $dev_id, $dev_state ) {
 		
@@ -283,9 +326,11 @@
 							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 							$db->update( 'devices', $data, $con );
 										
-							// 产生计费， 关闭时间为 time()-30（未完成）
-							if( $v2['open_t']>0 )
+							// 产生计费， 关闭时间为 time()-30
+							if( $v2['open_t']>0 ) {
+								gen_fee_record( $v2, 'fee-1' );
 								echo "\tfee-1: dev_id-".$v2['dev_id']."  open_t-".$v2['open_t']."  close_t-".(time()-30)."  ".time()."\r\n";
+							}
 						}
 					}
 				
@@ -295,7 +340,7 @@
 				if( $need_ctrl ) {						// 需要控制
 					$ins = strrev( implode('',$ins) );
 					$buff = sprintf( "[$v,2,%04XC]", bindec($ins) );
-					echo "-----$ins------$buff\r\n";
+					echo "instruct - $buff    $ins\r\n";
 					// 根据 ctrl 查找 socket
 					$socket = search_sock_with_ctrl( $sock_ids, $v );
 					if( !empty($socket) ) {
@@ -343,10 +388,8 @@
 								}
 							}
 							else {			// 超时
-								if( $rec['remark']=='' ) {
+								if( $rec['remark']=='' )
 									$db->update( 'devices', array('remark'=>'err'), $con );
-									// 记录此状体(未完成)
-								}	
 							}
 						}
 						break;
@@ -367,7 +410,7 @@
 								}
 								else {					// 超时			
 									// 恢复设备至未占用状态
-									echo time()."------".$rec['ins_recv_t']."--------".$rec['ins_send_t']."\r\n";
+									echo "timeout--".time()."---".$rec['ins_recv_t']."----".$rec['ins_send_t']."\r\n";
 									$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 									$db->update( 'devices', $data, $con );
 								}	
@@ -385,10 +428,11 @@
 										$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 										$db->update( 'devices', $data, $con );
 										
-										// 产生计费 关闭时间为 close_t (未完成)
-										if( $rec['open_t']>0 ) 
+										// 产生计费 关闭时间为 close_t
+										if( $rec['open_t']>0 ) {
+											gen_fee_record( $rec, 'fee-2' );
 											echo "\tfee-2: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['close_t']."  ".time()."\r\n";
-										
+										}
 									}
 								}
 							}
@@ -410,9 +454,10 @@
 							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 							$db->update( 'devices', $data, $con );
 							
-							// 产生计费，close_t - open_t(未完成)
+							// 产生计费，close_t - open_t
 							// 仅处理硬件设备正常连接时的费用处理
 							if( (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 ) {
+								gen_fee_record( $rec, 'fee-3' );
 								echo "\t\tfee-3: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['close_t']."\r\n";
 							}
 						}
@@ -431,9 +476,10 @@
 								$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 								$db->update( 'devices', $data, $con );
 								
-								// 产生计费 关闭时间为 ins_recv_t (未完成)
+								// 产生计费 关闭时间为 ins_recv_t
 								// 仅处理硬件设备正常连接时的费用处理
 								if( (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 ) {
+									gen_fee_record( $rec, 'fee-4' );
 									echo "\t\tfee-4: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['ins_recv_t']."\r\n";
 								}
 							}
