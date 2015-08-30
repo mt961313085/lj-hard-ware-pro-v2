@@ -82,6 +82,7 @@
 		foreach( $sock_ids as $k => $v ) {
 			if( (time()-$v->lt)>=30 ) {
 				socket_close( $v->sock );
+				error_log( "\tcase-".$v->id." was timeout at\t".date('Y-m-d H:i:s')."\r\n", 3, 'error_log.txt' );
 				unset( $sock_ids[$k] );
 			}
 		}
@@ -124,12 +125,14 @@
 						break;
 					
 					case '0':			// 设备请求读状态,返回[id,1,xxxxC](未完成)
-						$buff = "[".$v->id.",1,0000C]";
 						set_dev_state( $v->id, $v->state );
+						$state = read_hw_state( $v->id );
+						$buff = "[".$v->id.",1,$state]";
 						break;
 					
 					case '4':			// 开箱异常,返回[ID,5,AAAAC](未完成)
 						$buff = "[".$v->id.",5,AAAAC]";
+						error_log( "\t\t\tcase-".$v->id." was opened at\t".date('Y-m-d H:i:s')."\r\n", 3, 'error_log.txt' );
 						break;
 					
 					default:
@@ -145,6 +148,30 @@
 //------------------------------------------------------------------------------------
 // 							数据库相关操作
 //------------------------------------------------------------------------------------
+	// 从数据库中读取设备需要进入的状态
+	// 即：如果 student_no==-1， 应为CLOSE-0;
+	//	   否则，如果ins==OPEN， 应为 OPEN-1;
+	//			 如果ins==CLOSE，应为 CLOSE-0;
+	// 	函数返回16进制状态码，case状态用C占位;
+	function read_hw_state( $case_id ) {
+		
+		global $config;
+		
+		$st = array_fill( 0, 16, 0 );
+		
+		$db = new db( $config );
+		$res = $db->get_all( "SELECT dev_id, student_no, ins FROM devices WHERE ctrl='$case_id'" );
+		
+		foreach( $res as $k => $v ) {
+			$d_id = decode_dev_id( $v['dev_id'] );		// 设备在控制器内的id 
+			if( $v['student_no']!=-1 && $v['ins']=='OPEN' )
+				$st[$d_id-1] = 1;
+		}
+		
+		$st = strrev( implode('',$st) );
+		$st = sprintf( "%04XC", bindec($st) );
+		return $st;
+	}
 	
 	// 更新控制板 $dev_id 上设备状态
 	function set_dev_state( $dev_id, $dev_state ) {
@@ -227,7 +254,7 @@
 			}
 		}
 
-		if(  count($dev_ids)>0 ) {									// 遍历指定设备
+		if( count($dev_ids)>0 ) {									// 遍历指定设备
 			$sql = 'SELECT * FROM devices WHERE ';
 			foreach( $dev_ids as $v ) {			// 以ctrl为单位遍历设备
 				$sql_in = $sql."ctrl='$v'";
@@ -239,7 +266,10 @@
 				foreach( $res as $v2 ) {
 					
 					$d_id = decode_dev_id( $v2['dev_id'] ) - 1;  // 设备在控制器上的id，从1开始编号，共16个
-
+					
+					//if( $v2['dev_id']=='00101' || $v2['dev_id']=='00106' )
+						//echo $v2['dev_id']."--------".$v2['ins']."\r\n";
+					
 					if( $v2['ins']=='OPEN' )
 						$ins[$d_id] = 1;
 					
@@ -264,7 +294,7 @@
 								
 				if( $need_ctrl ) {						// 需要控制
 					$ins = strrev( implode('',$ins) );
-					$buff = sprintf( "[$v,2,%04XC]", bindec( $ins ) );
+					$buff = sprintf( "[$v,2,%04XC]", bindec($ins) );
 					echo "-----$ins------$buff\r\n";
 					// 根据 ctrl 查找 socket
 					$socket = search_sock_with_ctrl( $sock_ids, $v );
@@ -348,16 +378,16 @@
 									$db->update( 'devices', $data, $con );
 								}
 								else {
-									// 仅处理设备正常发送心跳，但控制状态不对的情况处理
+									// 仅处理设备正常发送心跳，但控制状态不对时的处理
 									if( (time()-$rec['close_t'])>30 && (time()-$rec['state_recv_t'])<30 ) {
 										
 										// 恢复设备至未占用状态
 										$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 										$db->update( 'devices', $data, $con );
 										
-										
 										// 产生计费 关闭时间为 close_t (未完成)
-										echo "\tfee-2: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['close_t']."  ".time()."\r\n";
+										if( $rec['open_t']>0 ) 
+											echo "\tfee-2: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['close_t']."  ".time()."\r\n";
 										
 									}
 								}
@@ -382,7 +412,7 @@
 							
 							// 产生计费，close_t - open_t(未完成)
 							// 仅处理硬件设备正常连接时的费用处理
-							if( (time()-$rec['state_recv_t'])<30 ) {
+							if( (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 ) {
 								echo "\t\tfee-3: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['close_t']."\r\n";
 							}
 						}
@@ -403,7 +433,7 @@
 								
 								// 产生计费 关闭时间为 ins_recv_t (未完成)
 								// 仅处理硬件设备正常连接时的费用处理
-								if( (time()-$rec['state_recv_t'])<30 ) {
+								if( (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 ) {
 									echo "\t\tfee-4: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['ins_recv_t']."\r\n";
 								}
 							}

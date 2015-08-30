@@ -86,6 +86,7 @@
 					if( empty($sock_ids[$key]->id) ) {				// 表明此socket是第一次发送数据
 						$sock_ids[$key]->id = $one_client_order[0]->id;
 						$sock_ids[$key]->sock = $read_sock;
+						error_log( "case-".$sock_ids[$key]->id." was online at\t".date('Y-m-d H:i:s')."\r\n", 3, 'error_log.txt' );
 					}
 												
 					$dev_ids = pro_ins( $one_client_order, $read_sock );				
@@ -93,6 +94,7 @@
 				}
 				else {
 					socket_close( $read_sock );
+					error_log( "\tcase-".$sock_ids[$key]->id." was offline normally at\t".date('Y-m-d H:i:s')."\r\n", 3, 'error_log.txt' );
 					unset( $sock_ids[$key] );
 				}	
 			}
@@ -110,13 +112,15 @@
 		// 每5秒轮询数据表（实际发送控制指令）
 		// 进行数据库内，硬件连接超时处理
 		if( (time()-$check_db_t)>=5 ) {
+			
 			$check_db_t = time();
-			echo "check_db every 5s - ".time()."\r\n";
+			echo "check_db all - ".time()."\r\n";
+			
 			// 检查全部数据库
-			$s1 = time();
+			$s1 = microtime( TRUE );
 			check_db( [] );
-			if( (time()-$s1)>0.5 )
-				echo "use: ".(time()-$s1)."\r\n";
+			if( (microtime(TRUE)-$s1)>=0.5 )
+				echo "check_db all use: ".(microtime(TRUE)-$s1)."s\r\n";
 		}
 		
 		// 检查清理 socket 超时（不操作数据库，不发送指令）

@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS school_device_db.devices (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS school_device_db.fee_record (
-	`id` 			INT(11) NOT NULL AUTO_INCREMENT,
 	`dev_id` 		VARCHAR(12) NOT NULL,				/* 设备硬件唯一标号						*/
 	`student_no` 	INT(11) NOT NULL,					/* 设备使用学生学号						*/
 	`open_t` 		BIGINT NOT NULL DEFAULT 0,			/* 设备开启时间							*/
@@ -34,8 +33,9 @@ CREATE TABLE IF NOT EXISTS school_device_db.fee_record (
 	`price` 		INT(11) NOT NULL,					/* 单价									*/
 	`sum_t` 		BIGINT NOT NULL DEFAULT 0,			/*	计费总时长							*/
 	`fee` 			INT(11) NOT NULL DEFAULT 0,			/* 总费用，单位：分						*/
+	`fee_type`		VARCHAR(12),						/* 用于记录何种情况下产生的fee，主要用于调试 */
 	`fee_flag` 		INT(11) NOT NULL DEFAULT 0,			/* 是否支付成功 0-未成功  1-成功		*/
-	PRIMARY KEY (`id`)
+	PRIMARY KEY (`student_no`,`open_t`,`dev_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO school_device_db.devices ( dev_id, dev_type, dev_locate, ctrl, price  ) VALUES ( '00101', 'shower', 'H1-412', '001', 30 );

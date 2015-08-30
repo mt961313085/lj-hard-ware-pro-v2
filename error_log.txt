@@ -1,0 +1,6 @@
+case-001 was online at	2015-08-30 17:58:23
+case-001 was online at	2015-08-30 17:58:50
+	case-001 was offline normally at	2015-08-30 17:58:53
+case-001 was online at	2015-08-30 17:58:54
+	case-001 was offline normally at	2015-08-30 17:58:59
+case-001 was online at	2015-08-30 17:59:00

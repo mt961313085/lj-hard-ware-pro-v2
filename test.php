@@ -11,12 +11,12 @@ $db = new db( $config );
 // 测试 00101 00106 设备开, 30s 后关
 // 不用开启硬件仿真终端，或硬件仿真终端进行指令正确响应
 echo "OPEN dev-00101\r\n";
-$data = array( 'student_no'=>2, 'ins'=>'OPEN', 'dev_state'=>0, 'open_t'=>0, 'ins_recv_t'=>time() );
+$data = array( 'student_no'=>2, 'ins'=>'OPEN', 'dev_state'=>0, 'open_t'=>0, 'ins_recv_t'=>time(), 'state_recv_t'=>time() );
 $db->update( 'devices', $data, 'dev_id="00101"' );
 
 sleep( 6 );
 echo "OPEN dev-00106\r\n";
-$data = array( 'student_no'=>2, 'ins'=>'OPEN', 'dev_state'=>0, 'open_t'=>0, 'ins_recv_t'=>time() );
+$data = array( 'student_no'=>2, 'ins'=>'OPEN', 'dev_state'=>0, 'open_t'=>0, 'ins_recv_t'=>time(), 'state_recv_t'=>time() );
 $db->update( 'devices', $data, 'dev_id="00106"' );
 
 sleep( 30 );
@@ -65,7 +65,7 @@ foreach( $res as $v0 ) {
 	}
 	echo "\r\n";
 }
-*/
+
 
 /*
 // 测试 00103 设备正确开启，然后硬件异常关闭
