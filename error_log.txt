@@ -22,3 +22,4 @@ case-web was online at	2015-08-30 20:09:20
 	case-web was offline normally at	2015-08-30 20:09:20
 case-001 was online at	2015-08-30 20:12:10
 	case-001 was offline normally at	2015-08-30 20:13:18
+case-001 was online at	2015-08-30 20:26:28
