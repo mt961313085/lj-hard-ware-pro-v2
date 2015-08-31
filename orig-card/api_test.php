@@ -2,7 +2,8 @@
 header("Content-type:text/html;charset=utf-8");
 require_once("config.php");
 require_once("api.php");
-$api = new cardApi($config);
+
+//$api = new cardApi($config);
 
 //$api->bind_device_by_qrcode("201520152015","J65011");
 //2015201520155D324367938AC9BCF93AE9BA6C19D0FD
@@ -13,6 +14,8 @@ $api = new cardApi($config);
 
 //$api->login("201520152015", "111111");//{("000020300032","J65011");
 //exit;20152705012420F7663B6DFDCEEC34C9B6656BB1E60A
+
+
 http_post_json('{
   "password" : "111111",
   "stu_no" : "201520152015",
@@ -23,6 +26,8 @@ http_post_json('{
   "token":"70a1/NVf4ek2zGcjIqhZiGxPCqBCwnGXSLDpFhQZo8MpFNwy2fbO1p3DqBkLmFGdHXqInFAunVNegaYN0vqnQDeu2Ee+hwYQUujiaFHMXjKPLTvFpSzgGpveor2YtS3d9A",
   "qrcode" : "H3A112"
 }');
+
+
 /*http_post_json('{
   "stu_no" : "201520152015",
   "token" : "3a8bBpTxJifllJm+uj9I3omQb42wgGuXVZ2AZnfJIciQjMg6GUgtfcT84gacgDssBk9UQS3cB+d8OIx49uyNd3pOpqv2Ko3HeIYkGLTFlgEZSg2rZg5Q1m8KFnn20xneVQ",

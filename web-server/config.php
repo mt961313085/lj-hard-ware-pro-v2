@@ -12,8 +12,8 @@
 	$config['echostr'] = '权限验证来源';
 
 	$config['dbhost'] = 'localhost'; 											// 数据库主机
-	$config['dbuser'] = 'yunkauser'; 											// 数据库用户名
-	$config['dbpwd'] = 'KKBBtS7ynWJnPnWm'; 										// 数据库用户名密码
+	$config['dbuser'] = 'root'; 											// 数据库用户名
+	$config['dbpwd'] = 'blue'; 										// 数据库用户名密码
 	$config['database'] = 'yunkadb'; 											// 数据库名
 
 $config["build_map"] = array("J"=>"娇子","H"=>"鸿儒");
