@@ -187,14 +187,17 @@
 		
 		switch( $type ) {
 			case 'fee-1':			// 关闭时间为 time()-30
-				$data['close_t'] = time() - 30;
+				if( $info['ins']=='OPEN' )
+					$data['close_t'] = time() - 30;
+				else
+					$data['close_t'] = $info['ins_recv_t'];
 				break;
 			
 			case 'fee-2':			// 关闭时间为 close_t
-			case 'fee-3':
 				$data['close_t'] = $info['close_t'];
 				break;
-			
+				
+			case 'fee-3':
 			case 'fee-4':			// 关闭时间为 ins_recv_t
 				$data['close_t'] = $info['ins_recv_t'];
 				break;
@@ -321,16 +324,17 @@
 											
 						if( $v2['student_no']!=-1 ) {
 							
+							// 产生计费，当前指令为 OPEN，关闭时间为 time()-30；为CLOSE 关闭时间为指令接收时间
+							if( $v2['open_t']>0 && $v2['remark']!='gen_fee' ) {
+								gen_fee_record( $v2, 'fee-1' );
+								echo "\tfee-1: dev_id-".$v2['dev_id']."  open_t-".$v2['open_t']."  close_t-".(time()-30)."  ".time()."\r\n";
+							}
+							
 							// 恢复设备至未占用状态
 							$con = "dev_id='".$v2['dev_id']."'";
 							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 							$db->update( 'devices', $data, $con );
-										
-							// 产生计费， 关闭时间为 time()-30
-							if( $v2['open_t']>0 ) {
-								gen_fee_record( $v2, 'fee-1' );
-								echo "\tfee-1: dev_id-".$v2['dev_id']."  open_t-".$v2['open_t']."  close_t-".(time()-30)."  ".time()."\r\n";
-							}
+
 						}
 					}
 				
@@ -424,15 +428,16 @@
 									// 仅处理设备正常发送心跳，但控制状态不对时的处理
 									if( (time()-$rec['close_t'])>30 && (time()-$rec['state_recv_t'])<30 ) {
 										
-										// 恢复设备至未占用状态
-										$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
-										$db->update( 'devices', $data, $con );
-										
 										// 产生计费 关闭时间为 close_t
 										if( $rec['open_t']>0 ) {
 											gen_fee_record( $rec, 'fee-2' );
 											echo "\tfee-2: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['close_t']."  ".time()."\r\n";
 										}
+										
+										// 恢复设备至未占用状态
+										$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+										$db->update( 'devices', $data, $con );
+										
 									}
 								}
 							}
@@ -450,19 +455,29 @@
 					case 'CLOSE':
 						if( $rec['dev_state']==0 ) {
 							
-							// 恢复设备至未占用状态
-							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
-							$db->update( 'devices', $data, $con );
-							
 							// 产生计费，close_t - open_t
 							// 仅处理硬件设备正常连接时的费用处理
-							if( (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 ) {
+							if( (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 && $rec['remark']!='gen_fee' ) {							
 								gen_fee_record( $rec, 'fee-3' );
 								echo "\t\tfee-3: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['close_t']."\r\n";
 							}
+							
+							// 恢复设备至未占用状态
+							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+							$db->update( 'devices', $data, $con );
 						}
 						else {
 							
+							// 产生计费 关闭时间为 ins_recv_t
+							// 仅处理硬件设备正常连接时的费用处理						
+							if( $rec['remark']!='gen_fee' && (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 ) {
+									$data = array( 'remark'=>'gen_fee' );
+									$db->update( 'devices', $data, $con );
+									
+									gen_fee_record( $rec, 'fee-4' );
+									echo "\t\tfee-4: dev_id-".$rec['dev_id']."  ins_recv_t-".$rec['ins_recv_t']."  open_t-".$rec['open_t']."  close_t-".$rec['ins_recv_t']."\r\n";	
+							}
+								
 							if( (time()-$rec['ins_recv_t'])<=$T_OUT ) {
 								if( (time()-$rec['ins_send_t'])>=5 ) {
 									$need_ctrl = 1;
@@ -471,17 +486,9 @@
 								}
 							}
 							else {					// 超时
-							
 								// 恢复设备至未占用状态
 								$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 								$db->update( 'devices', $data, $con );
-								
-								// 产生计费 关闭时间为 ins_recv_t
-								// 仅处理硬件设备正常连接时的费用处理
-								if( (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 ) {
-									gen_fee_record( $rec, 'fee-4' );
-									echo "\t\tfee-4: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['ins_recv_t']."\r\n";
-								}
 							}
 						}
 						break;

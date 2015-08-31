@@ -7,17 +7,23 @@ $config['dbpwd'] = 'blue';
 $config['database'] = 'school_device_db';
 
 $db = new db( $config );
-/*
+
 // 测试 00101 00106 设备开, 30s 后关
-// 不用开启硬件仿真终端，或硬件仿真终端进行指令正确响应
+// 不用开启硬件仿真终端, 不进行计费，超时后退出
+// 硬件仿真终端进行指令正确响应，以 CLOSE 指令接收到的时间进行计费，进入fee-3或fee-4 计费模式
+// 此情况下, 进入 fee-3 还是 fee-4，随机，由程序轮询时机确定，但两种模式下，计费结果相同；
 echo "OPEN dev-00101\r\n";
 $data = array( 'student_no'=>2, 'ins'=>'OPEN', 'dev_state'=>0, 'open_t'=>0, 'ins_recv_t'=>time(), 'state_recv_t'=>time() );
 $db->update( 'devices', $data, 'dev_id="00101"' );
+
+web_send_ins( "[web,".time().",OPEN,00101]" );
 
 sleep( 6 );
 echo "OPEN dev-00106\r\n";
 $data = array( 'student_no'=>2, 'ins'=>'OPEN', 'dev_state'=>0, 'open_t'=>0, 'ins_recv_t'=>time(), 'state_recv_t'=>time() );
 $db->update( 'devices', $data, 'dev_id="00106"' );
+
+web_send_ins( "[web,".time().",OPEN,00106]" );
 
 sleep( 30 );
 $res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t from devices where dev_id="00101" or dev_id="00106"' );
@@ -34,9 +40,13 @@ echo "CLOSE dev-00101\r\n";
 $data = array( 'student_no'=>2, 'ins'=>'CLOSE', 'ins_recv_t'=>time() );
 $db->update( 'devices', $data, 'dev_id="00101"' );
 
+web_send_ins( "[web,".time().",CLOSE,00101]" );
+
 echo "CLOSE dev-00106\r\n";
 $data = array( 'student_no'=>2, 'ins'=>'CLOSE', 'ins_recv_t'=>time() );
 $db->update( 'devices', $data, 'dev_id="00106"' );
+
+web_send_ins( "[web,".time().",CLOSE,00106]" );
 
 sleep( 10 );
 $res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t from devices where dev_id="00101" or dev_id="00106"' );
@@ -46,7 +56,7 @@ foreach( $res as $v0 ) {
 	}
 	echo "\r\n";
 }
-*/
+
 
 /*
 // 测试 00102 设备开，并且进入三次重发
@@ -85,7 +95,7 @@ foreach( $res as $v0 ) {
 }
 */
 
-
+/*
 // 测试 00104 设备关闭，但状态为1，且硬件设备心跳超时
 // 不开启硬件仿真终端程序
 // 正常表现: 发送3次关闭指令，然后恢复为未占用模式，但设备状态为1；
@@ -103,7 +113,7 @@ foreach( $res as $v0 ) {
 	}
 	echo "\r\n";
 }
-
+*/
 $db->close();
 
 //-------------------------------------------------------------------------------
