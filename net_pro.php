@@ -207,9 +207,13 @@
 				return 0;
 		}
 		
-		$data['sum_t'] = $data['close_t'] - $data['open_t'] - $data['break_t'];
-		$data['fee'] = $data['price'] * $data['sum_t'];
+		$data['sum_t'] = $data['close_t'] - $data['open_t'] - $data['break_t'];			// 单位：秒
+		$data['fee'] = round( $data['price'] * $data['sum_t'] / 60 );					// 单位：分（金额）
 		
+		if( $info['dev_type']=='washer' && $data['sum_t']>2400 ) {			// 工作时常大于40分钟，就计费
+			$data['fee'] = 400;												// 洗衣机，统一收取4元/50分钟
+		}
+			
 		if( $data['fee']>0 )	
 			$db->insert( 'fee_record', $data );
 		
@@ -312,9 +316,6 @@
 				foreach( $res as $v2 ) {
 					
 					$d_id = decode_dev_id( $v2['dev_id'] ) - 1;  // 设备在控制器上的id，从1开始编号，共16个
-					
-					//if( $v2['dev_id']=='00101' || $v2['dev_id']=='00106' )
-						//echo $v2['dev_id']."--------".$v2['ins']."\r\n";
 					
 					if( $v2['ins']=='OPEN' )
 						$ins[$d_id] = 1;
@@ -441,7 +442,6 @@
 									}
 								}
 							}
-
 						}
 						else {					// dev_state==1
 							if( (time()-$rec['open_t'])>=$rec['pre_close_t'] ) {	// 开启时间超过最大允许开启时间
@@ -457,7 +457,7 @@
 							
 							// 产生计费，close_t - open_t
 							// 仅处理硬件设备正常连接时的费用处理
-							if( (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 && $rec['remark']!='gen_fee' ) {							
+							if( (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 && $rec['remark']!='gen_fee' ) {
 								gen_fee_record( $rec, 'fee-3' );
 								echo "\t\tfee-3: dev_id-".$rec['dev_id']."  open_t-".$rec['open_t']."  close_t-".$rec['close_t']."\r\n";
 							}

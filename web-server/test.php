@@ -151,8 +151,10 @@
 		$response = curl_exec( $ch );
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		$request_result = array($httpCode, $response);
-		print_r($request_result);
-		//$result = $this->parse_card_data($request_result);
+		
+		$order = array("\r\n", "\n", "\r", "\t"," ");
+		print_r( str_replace($order,'',$request_result) ) ;
+		//$result = $this->parse_card_data( $request_result );
 		//return $request_result;
 	}
 	

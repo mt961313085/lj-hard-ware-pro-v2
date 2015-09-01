@@ -402,24 +402,31 @@
 					break;
 				
 				case 'CLOSE':
-					if( $res['student_no']=='-1' ) {
-						$msg = '请先开启设备';
-					}
-					elseif( $res['student_no']==$student_no ) {						// 自己开的设备，自己关掉
-						$now = time();
-						$data = array( 'ins'=>'CLOSE', 'ins_recv_t'=>$now );
-						$query = $this->db->update( 'devices_ctrl', $data, "dev_id='".$res['dev_id']."' AND student_no='$student_no'" );
-						// 如数据库写入成功，则开始计费
+					if( $res['dev_type']=='washer' ) {				// 洗衣机只能50分钟后自动断电
+						$msg = '洗衣机50分钟后自动关闭，不能中途关闭';
 					}
 					else {
-						$msg = '设备正被别人占用';
-						$resp_code = 1;
+						if( $res['student_no']=='-1' ) {
+							$msg = '请先开启设备';
+						}
+						elseif( $res['student_no']==$student_no ) {						// 自己开的设备，自己关掉
+							$now = time();
+							$data = array( 'ins'=>'CLOSE', 'ins_recv_t'=>$now );
+							$query = $this->db->update( 'devices_ctrl', $data, "dev_id='".$res['dev_id']."' AND student_no='$student_no'" );
+							// 如数据库写入成功，则开始计费
+						}
+						else {
+							$msg = '设备正被别人占用';
+							$resp_code = 1;
+						}
 					}
 					
-					echo '{ "resp_desc" : "'.$msg.'",
-							"resp_code" : "'.$resp_code.'",
-							"data"      : "{}"
-						 }';				
+					if( $msg!='' ) {
+						echo '{ "resp_desc" : "'.$msg.'",
+								"resp_code" : "'.$resp_code.'",
+								"data"      : "{}"
+							 }';	
+					}
 					break;
 			}
 			
@@ -427,17 +434,24 @@
 				$buff = "[web,".time().",OPEN,".$res['dev_id']."]";
 				
 				if( $operate=='CLOSE' ) {					// 计算本次费用
-				
-					$display_fee_time = ( $now-$res['open_t']-$res['break_t'] ) / 60;
-					$total_fee = $display_fee_time * $res['price'] / 100;
 					
-					$fee_data = '{"fee_rate":"'.($res['price']/100).'元/分钟","time":"'.$display_fee_time.'分钟","total_fee":"'.$total_fee.'元"}';
+					if( $res['dev_type']=='washer' ) {
+						$display_fee_time = 50;
+						$total_fee = 4;
+						$price = '4元/50分钟';
+					}
+					else {
+						$display_fee_time = round( ($now-$res['open_t']-$res['break_t'] )/60, 2 );
+						$total_fee = round( $display_fee_time * $res['price']/100, 2 );
+						$price = ( $res['price']/100 ).'元/分钟';
+					}
+					
+					$fee_data = '{"fee_rate":"'.$price.'","time":"'.$display_fee_time.'分钟","total_fee":"'.$total_fee.'元"}';
 				
 					echo '{ "resp_desc" : "计费成功"",
 							"resp_code" : "0",
 							"data"      : "'.$fee_data.'"
-						 }';
-						 
+						 }';	 
 				}
 				else {
 					echo '{ "resp_desc" : "设备开启成功",
