@@ -68,7 +68,7 @@
             $data = @socket_read( $read_sock, 1024*5, PHP_BINARY_READ );
 			$key = search_sock( $sock_ids, $read_sock );
 			$sock_ids[$key]->lt = time();
-			
+
             // check if the client is disconnected
             if( $data===false ) {
 				unset( $sock_ids[$key] );
@@ -78,7 +78,7 @@
                 continue;
             }
 			else {
-				if( !empty( $data ) ) {				
+				if( !empty($data) && strlen($data)>0 ) {				
 					//echo "e1-\tclient send: ".$data."\t".date("Y-m-d H:i:s")."\r\n";
 					// 处理接收到的指令
 					$one_client_order = decode_order( $data );	

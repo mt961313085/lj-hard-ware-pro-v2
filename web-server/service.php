@@ -37,9 +37,9 @@
 			exit;
 		}
 		
-		$post['sut_no'] = $stu_no;
-		$post['password'] = $password;
-		$post['token'] = $token;
+		//$post['sut_no'] = $stu_no;
+		//$post['password'] = $password;
+		//$post['token'] = $token;
 	}
 	else {							// login 进行 sign 验证
 									// login 时，无post['token']，而是post['sign']
@@ -56,7 +56,7 @@
 			exit;
 		}
 	}
-
+		
 	switch( $action ) {
 		
 		case 'login':
@@ -143,7 +143,7 @@
 			$token = $post['token'];
 			$delay_open = $post['delay_open'];
 			$delay_close = $post['delay_close'];
-			$api->open_shower($student_no,$device_id, $time, $delay_open, $delay_close);
+			$api->open_shower( $student_no, $device_id, $time, $delay_open, $delay_close );
 			break;
 		
 		case 'closeShower':
@@ -151,7 +151,7 @@
 			$device_id = $post['device_id'];
 			$token = $post['token'];
 			$password = $post['password'];
-			$api->close_shower($student_no,$device_id,$password);
+			$api->close_shower( $student_no, $device_id, $password );
 			break;
 		
 		case 'openWasher':

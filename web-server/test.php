@@ -5,7 +5,7 @@
 		
 	$api = new cardApi( $config );
 	
-	
+/*	
 	$str = '{
 		  "action" : "getDeviceList",
 		  "stu_no" : "201521040196",
@@ -14,8 +14,21 @@
 		  "token" : "201521040196AE22A25AE01824BD061C423436DF3089",
 		  "t" : "1440482594"
 		}';
+*/	
 	
-	
+	$str = '{
+			  "action" : "openShower",
+			  "stu_no" : "201520152015",
+			  "t" : "1440489421",
+			  "device_id" : "H1-412",
+			  "time" : 300,
+			  "delay_close" : "0",
+			  "delay_open" : 0,
+			  "n" : "717733",
+			  "sign" : "3960d1f4ff1fd7fa3c8894e3389d52759b0d26db",
+			  "token" : "822bb2juldeXDtYGvNT6hH1rUUD2Jtrx\/hJC2mJfO\/DXdHkPKUgsvwmq1m6dG+MxSiVTBfPX3BYVZg3lp5DeXtE9yerXXwPPUHRrnRGiXW0TsxOqV0wzb44LXQiUx1Sr0g"
+			}';
+
 	//$post["token"] = '201521040196AE22A25AE01824BD061C423436DF3089';
 	//$authcode = $api->authcode( $post["token"], 'HX_DECODE', $config['hx_auth_key'] );
 	//echo "$authcode\r\n";
@@ -25,10 +38,24 @@
 	//$stu_no = $auth[0];
 	//$password = $auth[1];
 	//$token = $auth[2];
-	
-	
+		
 	http_post_json( $str );
 	
+	sleep( 10 );
+	$str = '{
+	  "action" : "closeShower",
+	  "stu_no" : "201520152015",
+	  "t" : "1440489421",
+	  "device_id" : "H1-412",
+	  "time" : 300,
+	  "delay_close" : "0",
+	  "delay_open" : 0,
+	  "n" : "717733",
+	  "sign" : "3960d1f4ff1fd7fa3c8894e3389d52759b0d26db",
+	  "token" : "822bb2juldeXDtYGvNT6hH1rUUD2Jtrx\/hJC2mJfO\/DXdHkPKUgsvwmq1m6dG+MxSiVTBfPX3BYVZg3lp5DeXtE9yerXXwPPUHRrnRGiXW0TsxOqV0wzb44LXQiUx1Sr0g"
+	}';
+	
+	http_post_json( $str );
 /*
 	http_post_json( '{
 						"password" : "111111",

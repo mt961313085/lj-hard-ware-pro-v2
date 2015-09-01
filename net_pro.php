@@ -164,7 +164,7 @@
 		
 		foreach( $res as $k => $v ) {
 			$d_id = decode_dev_id( $v['dev_id'] );		// 设备在控制器内的id 
-			if( $v['student_no']!=-1 && $v['ins']=='OPEN' )
+			if( $v['student_no']!='-1' && $v['ins']=='OPEN' )
 				$st[$d_id-1] = 1;
 		}
 		
@@ -254,13 +254,13 @@
 			
 			switch( $cur_state ) {
 				case '0':
-					if( $v['dev_state']==1 && $v['student_no']!=-1 && $v['ins']=='CLOSE' && $v['close_t']==0 )
+					if( $v['dev_state']==1 && $v['student_no']!='-1' && $v['ins']=='CLOSE' && $v['close_t']==0 )
 						$data['close_t'] = time();
 					$db->update( 'devices_ctrl', $data, $con );
 					break;
 				
 				case '1':
-					if( $v['dev_state']==0 && $v['ins']=='OPEN' && $v['student_no']!=-1 ) {
+					if( $v['dev_state']==0 && $v['ins']=='OPEN' && $v['student_no']!='-1' ) {
 						if( $v['open_t']==0 )
 							$data['open_t'] = time();
 						elseif( $v['close_t']>0 ) {				// 计算中断时间
@@ -322,7 +322,7 @@
 					// 仅处理设备断线，心跳超时情况的处理
 					if( $timeout_check==1 && (time()-$v2['state_recv_t'])>=30 ) {		// 如需要，首先进行设备连接中断处理
 											
-						if( $v2['student_no']!=-1 ) {
+						if( $v2['student_no']!='-1' ) {
 							
 							// 产生计费，当前指令为 OPEN，关闭时间为 time()-30；为CLOSE 关闭时间为指令接收时间
 							if( $v2['open_t']>0 && $v2['remark']!='gen_fee' ) {
@@ -332,7 +332,7 @@
 							
 							// 恢复设备至未占用状态
 							$con = "dev_id='".$v2['dev_id']."'";
-							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+							$data = array('student_no'=>'-1','ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 							$db->update( 'devices_ctrl', $data, $con );
 
 						}
@@ -415,7 +415,7 @@
 								else {					// 超时			
 									// 恢复设备至未占用状态
 									echo "timeout--".time()."---".$rec['ins_recv_t']."----".$rec['ins_send_t']."\r\n";
-									$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+									$data = array('student_no'=>'-1','ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 									$db->update( 'devices_ctrl', $data, $con );
 								}	
 							}
@@ -435,7 +435,7 @@
 										}
 										
 										// 恢复设备至未占用状态
-										$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+										$data = array('student_no'=>'-1','ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 										$db->update( 'devices_ctrl', $data, $con );
 										
 									}
@@ -463,7 +463,7 @@
 							}
 							
 							// 恢复设备至未占用状态
-							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+							$data = array('student_no'=>'-1','ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 							$db->update( 'devices_ctrl', $data, $con );
 						}
 						else {
@@ -487,7 +487,7 @@
 							}
 							else {					// 超时
 								// 恢复设备至未占用状态
-								$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
+								$data = array('student_no'=>'-1','ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
 								$db->update( 'devices_ctrl', $data, $con );
 							}
 						}

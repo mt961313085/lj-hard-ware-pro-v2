@@ -193,7 +193,7 @@
 			echo '{
 					"resp_desc" : "获取成功",
 					"resp_code" : "0",
-					"data":'.$this->config["carrier_account"].'
+					"data":'.$this->config['carrier_account'].'
 				 }';
 		}
 
@@ -232,6 +232,7 @@
 						"data"      : "{}"
 					 }';
 			}
+			
 			return true;
 		}
 
@@ -243,6 +244,7 @@
 			$result['resp_desc'] = '';
 			$result['resp_code'] = '0';
 			$result['data'] = $row;
+			
 			echo json_encode( $result );
 			return true;
 		}
@@ -278,7 +280,7 @@
 		//保修及意见反馈
 		public function get_feedback_list( $student_no, $type, $token ) {
 				
-			$sql = "SELECT * FROM `feedback`  WHERE `student_no`='$student_no' and type='$type'";
+			$sql = "SELECT * FROM feedback  WHERE student_no='$student_no' and type='$type'";
 			$query = $this->db->query( $sql );
 			
 			while( $row=$this->db->fetch_array($query) ) {
@@ -301,6 +303,7 @@
 				$result['resp_desc'] = '还没有数据';
 				$result['data'] = '';
 			}
+			
 			echo json_encode( $result );
 			return true;
 		}
@@ -311,7 +314,7 @@
 			
 			$condition = "student_no='$student_no' and password='$student_password'";
 			$values = array( 'password'=>'$new_password' );
-			$query = $this->db->update( 'user_info', $values,$condition );
+			$query = $this->db->update( 'user_info', $values, $condition );
 			
 			if( $query ) {
 				$result['resp_code'] = '0';
@@ -352,15 +355,19 @@
 			$this->operate_device_with_fee( $student_no, $device_id, 'CLOSE', 0, $password, $token, 0, $end_time );
 		}
 		
-		// (重写)
 		// $device_id - 设备位置信息，不是设备硬件id
+		// 此函数返回的计费信息，是还没有形成真实支付账单的信息
+		// 真实的支付账单，由 hardware_server.php 生成
+		// 真实的支付，由专门程序负责
 		private function operate_device_with_fee( $student_no, $device_id, $operate='OPEN', $fee, $password='', $token='', $begin_time=0, $end_time=0 ) {
 			
 			$buff = '';
 			$query = '';
+			$resp_code = 0;
+			$now = 0;
 			
 			// 根据 device_id 获取设备是否可以使用，并且获得设备硬件控制id
-			$res = $this->db->get_all( "SELECT student_no, dev_id, dev_locate, dev_state, ins, dev_type, price FROM devices_ctrl WHERE dev_locate='$device_id'" );
+			$res = $this->db->get_all( "SELECT student_no, open_t, dev_id, break_t, dev_locate, dev_state, ins, dev_type, price FROM devices_ctrl WHERE dev_locate='$device_id'" );
 			$res = $res[0];
 			
 			switch( $operate ) {
@@ -370,9 +377,9 @@
 							if( $res['dev_state']=='0' ) {				// 正常状态，可以使用
 								// 写数据库(加上条件，保证合法抢占)，socket发送指令
 								$data = array( 'student_no'=>$student_no, 'ins'=>'OPEN', 'ins_recv_t'=>time() );
-								$query = $this->db->update( 'devices_ctrl', $data, "dev_id='".$res['dev_id']."' AND student_no=-1" );
+								$query = $this->db->update( 'devices_ctrl', $data, "dev_id='".$res['dev_id']."' AND student_no='-1'" );
 							}
-							break
+							break;
 						
 						default:
 							if( $res['student_no']==$student_no ) {			// 自己多次按 OPEN, 或 自己关闭后又按 OPEN
@@ -383,10 +390,11 @@
 							}
 							else {
 								$msg = '设备正被别人占用，请稍后再试';
+								$resp_code = 1;
 							}
 							
 							echo '{ "resp_desc" : "'.$msg.'",
-									"resp_code" : "0",
+									"resp_code" : "'.$resp_code.'",
 									"data"      : "{}"
 								 }';						 
 							break;
@@ -394,243 +402,89 @@
 					break;
 				
 				case 'CLOSE':
-					if( $res['student_no']==-1 ) {
+					if( $res['student_no']=='-1' ) {
 						$msg = '请先开启设备';
 					}
 					elseif( $res['student_no']==$student_no ) {						// 自己开的设备，自己关掉
 						$now = time();
 						$data = array( 'ins'=>'CLOSE', 'ins_recv_t'=>$now );
-						$query = $this->db->update( 'devices_ctrl', $data, "dev_id='".$res['dev_id']."' AND student_no=$student_no" );
-						// 成功后，开始计费
+						$query = $this->db->update( 'devices_ctrl', $data, "dev_id='".$res['dev_id']."' AND student_no='$student_no'" );
+						// 如数据库写入成功，则开始计费
 					}
 					else {
-						
-						
+						$msg = '设备正被别人占用';
+						$resp_code = 1;
 					}
 					
 					echo '{ "resp_desc" : "'.$msg.'",
-							"resp_code" : "0",
+							"resp_code" : "'.$resp_code.'",
 							"data"      : "{}"
 						 }';				
 					break;
 			}
 			
-			if( $query ) {			
+			if( $query ) {		
 				$buff = "[web,".time().",OPEN,".$res['dev_id']."]";
-				echo '{ "resp_desc" : "设备开启成功",
-						"resp_code" : "0",
-						"data"      : "{}"
-						}';
+				
+				if( $operate=='CLOSE' ) {					// 计算本次费用
+				
+					$display_fee_time = ( $now-$res['open_t']-$res['break_t'] ) / 60;
+					$total_fee = $display_fee_time * $res['price'] / 100;
+					
+					$fee_data = '{"fee_rate":"'.($res['price']/100).'元/分钟","time":"'.$display_fee_time.'分钟","total_fee":"'.$total_fee.'元"}';
+				
+					echo '{ "resp_desc" : "计费成功"",
+							"resp_code" : "0",
+							"data"      : "'.$fee_data.'"
+						 }';
+						 
+				}
+				else {
+					echo '{ "resp_desc" : "设备开启成功",
+							"resp_code" : "0",
+							"data"      : "{}"
+						 }';
+				}
 			}
-			else {
+			else {		
 				echo '{
-						"resp_desc" : "设备已被占用",
+						"resp_desc" : "设备控制失败",
 						"resp_code" : "1",
 						"data"      : "{}"
 					 }';
+					 
+				$buff = '';
 			}
 			
-			if( $buff!='' )
-				￥this->send_message( $buff );
-				
-			
-			
-			
-			$data = '{}';
-			if( !$this->config['debug'] ) {
-				$this->socket = stream_socket_client('tcp://'.$this->socket_server_url.':'.$this->socket_server_port,$errno, $errstr,15);
-				$result = $this->oprate_device($device_id,$operate);
-			}
-			else{
-				$result = 1;
-			}
-			
-			if( $result==2 ) {
-
-				$condition = "student_no='$student_no' and device_id='$device_id'";
-				if($operate=='OPEN'){
-					$values = array('flag'=>'2','begin_time'=>0,'pre_end_time'=>0,'end_time'=>0,'fee_flag'=>0);
-					$query = $this->db->update('devices',$values,$condition);
-					echo '{
-					"resp_desc" : "设备已被占用",
-					"resp_code" : "1",
-					"data"      : "{}"
-					}';
-				}
-				elseif($operate=='CLOSE'){
-					$values = array('flag'=>'0','begin_time'=>0,'pre_end_time'=>0,'end_time'=>0,'fee_flag'=>0);
-					$query = $this->db->update('devices',$values,$condition);
-					echo '{
-					"resp_desc" : "设备已关闭",
-					"resp_code" : "1",
-					"data"      : "{}"
-					}';
-				}
-				else{
-					echo '{
-					"resp_desc" : "未知操作",
-					"resp_code" : "1002",
-					"data"      : "{}"
-					}';
-				}
-				return;
-			}
-			elseif( $result==3 ) {
-				echo '{
-				"resp_desc" : "操作失败,设备已断线，请联系管理人员报修",
-				"resp_code" : "1002",
-				"data"      : "{}"
-				}';
-				return;
-			}
-			elseif( $result==1 ) {//操作成功
-				//先更改数据库
-				$data = "{}";
-				$condition = "student_no='$student_no' and device_id='$device_id'";
-				if($operate == 'OPEN'){
-					$values = array('flag'=>'1','begin_time'=>$begin_time,'pre_end_time'=>$end_time,'end_time'=>0,'fee_flag'=>0);
-					$query = $this->db->update('devices',$values,$condition);
-					if($query){
-						$result_msg = '开启成功，数据更新成功';
-					}else{
-						$result_msg = '开启成功，数据库更新失败';
-					}
-					
-				}
-				else{
-					//计算本次费用
-					$sql = "select * from devices where student_no='$student_no' and device_id='$device_id'";
-					$device_item = $this->db->get_one($sql);
-					if( $device_item['begin_time']==0 ) {
-						$fee_time = 0;
-					}
-					else{
-						$fee_time = ($end_time - $device_item['begin_time']);
-					}
-					
-					$fee_rate = $this->config['water_fee'];
-
-					$total_fee = number_format(($fee_time * $fee_rate)/60,2)*100;
-					$display_fee = number_format(($fee_time * $fee_rate)/60,2);
-					$display_fee_time = floor($fee_time/60).':'.($fee_time%60);
-					$data = '{"fee_rate":"'.$this->config["water_fee"].'元/分钟","time":"'.$display_fee_time.'","total_fee":"'.$display_fee.'元"}';
-					if($total_fee > 0){
-						$t = time();
-						if($t >1441296000){
-							$trade_no = date('YmdHis').rand(1000,9999);
-							$response = $this->tptrade($student_no, $token, $trade_no, $password, $this->config['branch_id'],  $total_fee);//向一卡通缴费
-						}else{
-							$response['resp_code'] = 0 ;
-						}
-						//$trade_no = date("YmdHis").rand(1000,9999);
-						//$response = $this->tptrade($student_no, $token, $trade_no, $password, "4000002",  $total_fee);//向一卡通缴费
-						//echo $response["resp_code"]."ddd";
-						if($response['resp_code'] == 0){
-							$values = array('fee_flag'=>'1','flag'=>'0','end_time'=>$end_time);
-							$query = $this->db->update('devices',$values,$condition);
-							if(!$query){
-								//$this->oprate_device($device_id,'CLOSE');
-								$result_msg = '计费成功，数据库更新失败';
-							}
-						}else{
-							$result_msg = '计费失败';
-						}
-					}else{
-						$values = array('fee_flag'=>'1','flag'=>'0','end_time'=>$end_time);
-						$query = $this->db->update('devices',$values,$condition);
-						$data = '{"fee_rate":"'.$this->config["water_fee"].'元/分钟","time":"'.$display_fee_time.'","total_fee":"'.$total_fee.'元"}';
-					}
-				}
-				
-				//如果交易成功，则开启成功
-				if($query){
-					echo '{
-					"resp_desc" : "'.$result_msg.'",
-					"resp_code" : "0",
-					"data"      : '.$data.'
-					}';
-				}else{
-					echo '{
-					"resp_desc" : "'.$result_msg.'",
-					"resp_code" : "1001",
-					"data"      : {"fee_rate":"'.$this->config["water_fee"].'元/分钟","time":"00:00","total_fee":"0元"}
-					}';
-				}
-			}else{
-				echo '{
-				"resp_desc" : "操作失败",
-				"resp_code" : "1001",
-				"data"      : {"fee_rate":"'.$this->config["water_fee"].'元/分钟","time":"00:00","total_fee":"0元"}
-				}';
+			if( $buff!='' ) {
+				$this->socket = stream_socket_client( 'tcp://'.$this->socket_server_url.':'.$this->socket_server_port, $errno, $errstr, 15 );
+				$this->send_message( $buff );
 			}
 		}
 		
-		// (重写)
-		private function oprate_device( $room_id, $operate='OPEN' ) {
-			//$this->socket = stream_socket_client("tcp://".$this->socket_server_url.":".$this->socket_server_port,$errno, $errstr,15);
-			//
-			/*if($operate == "OPEN"){
-				$flag = 1;
-			}else($operate == "CLOSE"){
-				$flag = 0;
-			}*/
-			/*$this->db = new db($this->config);
-			$sql = "SELECT device_id FROM `devices` WHERE `device_id`='$room_id' and flag=1";
-			$row = $this->db->get_one($sql);
-			if($row && $operate == 'OPEN'){
-				return 2;//设备已被占用
-			}*/
-			$timestamp = time();
-			$buff = '[$timestamp,$operate,$room_id]';		
-			$result = 0;
-			$try_count = 0;
-			while($result==false && $try_count<3){
-				$res = $this->send_message($buff);
-				if($res == '[$timestamp,OK]'){
-					$result = 1;//操作成功
-				}elseif($res == '[$timestamp,BUSY]'){
-					$result = 2;//设备被占用
-				}elseif(strpos('$timestamp,CUT',$res)>0){
-					$result = 3;//设备断线
-					sleep(2);
-				}else{
-					sleep(2);
-				}
-				$try_count++;
-			}
-			return $result;
-		}
-		
-		//(重写)
+		// $device_id - 设备位置信息，不是设备硬件id
 		public function read_device_status( $student_no, $device_id ) {
-			$this->socket = stream_socket_client('tcp://'.$this->socket_server_url.':'.$this->socket_server_port,$errno, $errstr,15);
-
-			$timestamp = time();
-			$buff = '[$timestamp,READ,$device_id]';		
-			$result = false;
-			$try_count = 0;
-			while(!$result && $try_count<3){
-				$res = $this->send_message($buff);
-				if($res == '[$timestamp,ON]'){
-					echo '{
-						"resp_desc" : "当前设备状态是ON",
-						"resp_code" : "0",
-						"data"      : "{\"status\":\"1\"}"
-					}';
-					$result = true;//操作成功
-				}elseif($res == "[$timestamp,OFF]"){
-					echo '{
-						"resp_desc" : "当前设备状态是OFF",
-						"resp_code" : "0",
-						"data"      : "{\"status\":\"0\"}"
-					}';
-					$result = true;
-				}else{
-					//sleep(15);
-				}
-				$try_count++;
+			
+			$res = $this->db->get_all( "SELECT dev_state, student_no, state_recv_t FROM devices_ctrl WHERE dev_locate='$device_id'" );
+			$res = $res[0];
+			
+			switch( $res['dev_state'] ) {
+				case '0':
+					$st = 'ON';
+					$st_c = 1;
+					break;
+					
+				default:
+					$st = 'OFF';
+					$st_c = 0;
+					break;
 			}
-			return $result;
+
+			echo '{
+					"resp_desc" : "当前设备状态是"'.$st.',
+					"resp_code" : "0",
+					"data"      : "{\"status\":\"'.$st_c.'\"}"
+				 }';
 		}
 
 		//用户登录
@@ -914,7 +768,7 @@
 			}
 			else{
 				stream_set_timeout( $this->socket, 3 );
-				fwrite( $this->socket, '$message' );
+				fwrite( $this->socket, $message );
 				//stream_set_blocking( $this->socket, 1 );
 				$response =  fread( $this->socket, 1024 );
 				//stream_set_blocking( $this->socket, 0 );

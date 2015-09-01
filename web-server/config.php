@@ -5,8 +5,11 @@
 	$config['water_fee'] = '0.3'; 												// 水费元/分钟
 	$config['washer_fee'] = '400'; 												// 洗衣机费，分
 	$config['washer_time'] = '3000'; 											// 洗衣机时长秒
-	$config['socket_server_url'] = '10.71.29.51'; 								// 智控系统地址;
+	
+	//$config['socket_server_url'] = '10.71.29.51'; 							// 智控系统地址;
+	$config['socket_server_url'] = '127.0.0.1';
 	$config['socket_server_port'] = '2023'; 									// 智控系统端口;
+	
 	$config['token'] = '07A4A8DAC4D7C27AFF893F2208B0D60B'; 
 	$config['school_id'] = '13816'; 											// 学校ID
 	$config['echostr'] = '权限验证来源';

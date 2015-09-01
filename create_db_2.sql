@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS devices_ctrl (
 	`ctrl`			VARCHAR(6) NOT NULL,					/* 设备所属控制器							*/
 
 	`price`			DOUBLE NOT NULL,						/* 单价：分/分钟							*/
-	`student_no` 	INT(11) NOT NULL default -1,			/* 当前占用设备学生号， -1-未占用			*/
+	`student_no` 	VARCHAR(24) NOT NULL default '-1',		/* 当前占用设备学生号， -1-未占用			*/
 	`ins`			VARCHAR(12) NOT NULL DEFAULT 'NONE',	/* 当前设备控制指令，OPEN, 	CLOSE			*/
 	`ins_recv_t` 	BIGINT NOT NULL DEFAULT 0,				/* 收到指令时的UTC时间戳					*/
 	`ins_send_t` 	BIGINT NOT NULL DEFAULT 0,	

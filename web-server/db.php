@@ -3,13 +3,13 @@
 * db 单例
 */
 class db{
-    private $host; //数据库主机
-    private $user; //数据库用户名
-    private $pwd; //数据库用户名密码
-    private $database; //数据库名
-    private $charset = 'utf8'; //数据库编码，GBK,UTF8,gb2312
-    private $link;             //数据库连接标识;
-    private $rows;             //查询获取的多行数组
+    private $host; 					//数据库主机
+    private $user; 					//数据库用户名
+    private $pwd; 					//数据库用户名密码
+    private $database; 				//数据库名
+    private $charset = 'utf8'; 		//数据库编码，GBK,UTF8,gb2312
+    private $link;             		//数据库连接标识;
+    private $rows;             		//查询获取的多行数组			
     //static $_instance; //存储对象
     /**
      * 构造函数
@@ -77,14 +77,16 @@ class db{
     }
  
     //更新
-    public function update( $table,$dataArray,$condition="") {
+    public function update( $table, $dataArray, $condition="" ) {
         if( !is_array($dataArray) || count($dataArray)<=0) {
             $this->halt('没有要更新的数据');
             return false;
         }
+		
         $value = "";
-        while( list($key,$val) = each($dataArray))
-        $value .= "$key = '$val',";
+        while( list($key,$val) = each($dataArray) )
+			$value .= "$key='$val',";
+		
         $value .= substr( $value,0,-1);
         $sql = "update $table set $value where 1=1 and $condition";
         $this->write_log("更新 ".$sql);
@@ -153,21 +155,15 @@ class db{
     }
 
     //写入日志文件
-    public function write_log($msg=''){
-        //echo "$msg";
-        /*if($this->is_log){
+    public function write_log( $msg='' ) {
+        //echo "------$msg\r\n";
+		/*
+        if($this->is_log){
             $text = date("Y-m-d H:i:s")." ".$msg."\r\n";
-            fwrite($this->handle,$text);
-        }*/
+            fwrite( $this->handle, $text );
+        }
+		*/
     }
 }
-/*//用例
-$db = db::getInstance();
-$db2 = db::getInstance();
-$data = $db->getRows('select * from blog');
-//print_r($data);
-//判断两个对象是否相等
-if($db === $db2){
-    echo 'true';
-}*/
+
 ?>
