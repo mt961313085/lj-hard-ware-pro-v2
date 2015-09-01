@@ -5,5 +5,6 @@
 	$config['dbhost'] = 'localhost'; 
 	$config['dbuser'] = 'root';
 	$config['dbpwd'] = 'blue';
-	$config['database'] = 'school_device_db';
+	//$config['database'] = 'school_device_db';
+	$config['database'] = 'yunkadb';
 ?>

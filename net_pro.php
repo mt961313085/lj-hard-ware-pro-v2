@@ -160,7 +160,7 @@
 		$st = array_fill( 0, 16, 0 );
 		
 		$db = new db( $config );
-		$res = $db->get_all( "SELECT dev_id, student_no, ins FROM devices WHERE ctrl='$case_id'" );
+		$res = $db->get_all( "SELECT dev_id, student_no, ins FROM devices_ctrl WHERE ctrl='$case_id'" );
 		
 		foreach( $res as $k => $v ) {
 			$d_id = decode_dev_id( $v['dev_id'] );		// 设备在控制器内的id 
@@ -243,7 +243,7 @@
 		// dev_id, student_no, ins, dev_state, ins_recv
 		
 		$db = new db( $config );
-		$res = $db->get_all( "SELECT * FROM devices WHERE ctrl='$dev_id'" );
+		$res = $db->get_all( "SELECT * FROM devices_ctrl WHERE ctrl='$dev_id'" );
 		
 		foreach( $res as $k => $v ) {
 			$d_id = decode_dev_id( $v['dev_id'] );		// 设备在控制器内的id 
@@ -256,7 +256,7 @@
 				case '0':
 					if( $v['dev_state']==1 && $v['student_no']!=-1 && $v['ins']=='CLOSE' && $v['close_t']==0 )
 						$data['close_t'] = time();
-					$db->update( 'devices', $data, $con );
+					$db->update( 'devices_ctrl', $data, $con );
 					break;
 				
 				case '1':
@@ -269,7 +269,7 @@
 						}	
 					}
 						
-					$db->update( 'devices', $data, $con );
+					$db->update( 'devices_ctrl', $data, $con );
 					break;
 			}
 		}
@@ -293,7 +293,7 @@
 		
 		if( count($dev_ids)==0 ) {			// 遍历全部设备
 			$timeout_check = 1;
-			$mid = $db->get_all( 'select distinct ctrl from devices' );
+			$mid = $db->get_all( 'select distinct ctrl from devices_ctrl' );
 			$dev_ids = array();
 			foreach( $mid as $v ) {
 				$dev_ids[] = $v['ctrl'];
@@ -301,7 +301,7 @@
 		}
 
 		if( count($dev_ids)>0 ) {									// 遍历指定设备
-			$sql = 'SELECT * FROM devices WHERE ';
+			$sql = 'SELECT * FROM devices_ctrl WHERE ';
 			foreach( $dev_ids as $v ) {			// 以ctrl为单位遍历设备
 				$sql_in = $sql."ctrl='$v'";
 				$ins = array_fill( 0, 16, 0 );	// 用于设备控制
@@ -333,7 +333,7 @@
 							// 恢复设备至未占用状态
 							$con = "dev_id='".$v2['dev_id']."'";
 							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
-							$db->update( 'devices', $data, $con );
+							$db->update( 'devices_ctrl', $data, $con );
 
 						}
 					}
@@ -374,26 +374,26 @@
 						$sig = empty($rec['remark']) || empty($rec['ins_recv_t']) || empty($rec['ins_send_t']) || empty($rec['open_t']) || empty($rec['close_t']);
 						if( $sig==1 ) {
 							$data = array('remark'=>'', 'ins_recv_t'=>0, 'ins_send_t'=>0, 'open_t'=>0, 'close_t'=>0, 'ins'=>'NONE');
-							$db->update( 'devices', $data, $con );
+							$db->update( 'devices_ctrl', $data, $con );
 						}
 						break;
 						
 					case 1:
 						if( $rec['ins_recv_t']==0 ) {
 							$need_ctrl = 1;
-							$db->update( 'devices', array('ins_recv_t'=>time(),'ins_send_t'=>time()), $con );
+							$db->update( 'devices_ctrl', array('ins_recv_t'=>time(),'ins_send_t'=>time()), $con );
 						}
 						else {
 							if( (time()-$rec['ins_recv_t'])<=$T_OUT ) {
 								if( (time()-$rec['ins_send_t'])>=5 ) {
 									$data = array( 'ins_send_t'=>time() );
-									$db->update( 'devices', $data, $con );
+									$db->update( 'devices_ctrl', $data, $con );
 									$need_ctrl = 1;
 								}
 							}
 							else {			// 超时
 								if( $rec['remark']=='' )
-									$db->update( 'devices', array('remark'=>'err'), $con );
+									$db->update( 'devices_ctrl', array('remark'=>'err'), $con );
 							}
 						}
 						break;
@@ -409,20 +409,20 @@
 									if( (time()-$rec['ins_send_t'])>=5 ) {
 										$need_ctrl = 1;
 										$data = array( 'ins_send_t'=>time() );
-										$db->update( 'devices', $data, $con );
+										$db->update( 'devices_ctrl', $data, $con );
 									}
 								}
 								else {					// 超时			
 									// 恢复设备至未占用状态
 									echo "timeout--".time()."---".$rec['ins_recv_t']."----".$rec['ins_send_t']."\r\n";
 									$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
-									$db->update( 'devices', $data, $con );
+									$db->update( 'devices_ctrl', $data, $con );
 								}	
 							}
 							else {						// open_t>0  开启后又异常中断
 								if( $rec['close_t']<=0 ) {
 									$data = array( 'close_t'=>time() );
-									$db->update( 'devices', $data, $con );
+									$db->update( 'devices_ctrl', $data, $con );
 								}
 								else {
 									// 仅处理设备正常发送心跳，但控制状态不对时的处理
@@ -436,7 +436,7 @@
 										
 										// 恢复设备至未占用状态
 										$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
-										$db->update( 'devices', $data, $con );
+										$db->update( 'devices_ctrl', $data, $con );
 										
 									}
 								}
@@ -447,7 +447,7 @@
 							if( (time()-$rec['open_t'])>=$rec['pre_close_t'] ) {	// 开启时间超过最大允许开启时间
 								$need_ctrl = 1;
 								$data = array( 'ins'=>'CLOSE', 'ins_recv_t'=>time(), 'ins_send_t'=>time() );
-								$db->update( 'devices', $data, $con );
+								$db->update( 'devices_ctrl', $data, $con );
 							}
 						}
 						break;
@@ -464,7 +464,7 @@
 							
 							// 恢复设备至未占用状态
 							$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
-							$db->update( 'devices', $data, $con );
+							$db->update( 'devices_ctrl', $data, $con );
 						}
 						else {
 							
@@ -472,7 +472,7 @@
 							// 仅处理硬件设备正常连接时的费用处理						
 							if( $rec['remark']!='gen_fee' && (time()-$rec['state_recv_t'])<30 && $rec['open_t']>0 ) {
 									$data = array( 'remark'=>'gen_fee' );
-									$db->update( 'devices', $data, $con );
+									$db->update( 'devices_ctrl', $data, $con );
 									
 									gen_fee_record( $rec, 'fee-4' );
 									echo "\t\tfee-4: dev_id-".$rec['dev_id']."  ins_recv_t-".$rec['ins_recv_t']."  open_t-".$rec['open_t']."  close_t-".$rec['ins_recv_t']."\r\n";	
@@ -482,13 +482,13 @@
 								if( (time()-$rec['ins_send_t'])>=5 ) {
 									$need_ctrl = 1;
 									$data = array( 'ins_send_t'=>time() );
-									$db->update( 'devices', $data, $con );
+									$db->update( 'devices_ctrl', $data, $con );
 								}
 							}
 							else {					// 超时
 								// 恢复设备至未占用状态
 								$data = array('student_no'=>-1,'ins'=>'NONE','ins_recv_t'=>0,'ins_send_t'=>0,'open_t'=>0,'close_t'=>0,'break_t'=>0,'remark'=>'');
-								$db->update( 'devices', $data, $con );
+								$db->update( 'devices_ctrl', $data, $con );
 							}
 						}
 						break;

@@ -93,3 +93,68 @@ case-web was online at	2015-08-31 20:56:24
 	case-web was offline normally at	2015-08-31 20:56:24
 case-web was online at	2015-08-31 20:56:24
 	case-web was offline normally at	2015-08-31 20:56:24
+case-web was online at	2015-09-01 10:21:58
+	case-web was offline normally at	2015-09-01 10:21:58
+case-web was online at	2015-09-01 10:22:04
+	case-web was offline normally at	2015-09-01 10:22:04
+case-001 was online at	2015-09-01 10:22:30
+case-web was online at	2015-09-01 10:22:34
+	case-web was offline normally at	2015-09-01 10:22:34
+case-web was online at	2015-09-01 10:22:34
+	case-web was offline normally at	2015-09-01 10:22:34
+case-web was online at	2015-09-01 10:22:47
+	case-web was offline normally at	2015-09-01 10:22:47
+case-web was online at	2015-09-01 10:22:53
+	case-web was offline normally at	2015-09-01 10:22:53
+case-web was online at	2015-09-01 10:23:23
+	case-web was offline normally at	2015-09-01 10:23:23
+case-web was online at	2015-09-01 10:23:23
+	case-web was offline normally at	2015-09-01 10:23:23
+case-web was online at	2015-09-01 10:24:41
+	case-web was offline normally at	2015-09-01 10:24:41
+case-web was online at	2015-09-01 10:24:47
+	case-web was offline normally at	2015-09-01 10:24:47
+case-web was online at	2015-09-01 10:25:17
+	case-web was offline normally at	2015-09-01 10:25:17
+case-web was online at	2015-09-01 10:25:17
+	case-web was offline normally at	2015-09-01 10:25:17
+case-web was online at	2015-09-01 10:25:42
+	case-web was offline normally at	2015-09-01 10:25:42
+case-web was online at	2015-09-01 10:25:48
+	case-web was offline normally at	2015-09-01 10:25:48
+case-web was online at	2015-09-01 10:26:18
+	case-web was offline normally at	2015-09-01 10:26:18
+case-web was online at	2015-09-01 10:26:18
+	case-web was offline normally at	2015-09-01 10:26:18
+case-web was online at	2015-09-01 10:42:52
+	case-web was offline normally at	2015-09-01 10:42:52
+case-web was online at	2015-09-01 10:42:58
+	case-web was offline normally at	2015-09-01 10:42:58
+case-web was online at	2015-09-01 10:43:28
+	case-web was offline normally at	2015-09-01 10:43:28
+case-web was online at	2015-09-01 10:43:28
+	case-web was offline normally at	2015-09-01 10:43:28
+case-web was online at	2015-09-01 10:45:40
+	case-web was offline normally at	2015-09-01 10:45:40
+case-web was online at	2015-09-01 10:45:46
+	case-web was offline normally at	2015-09-01 10:45:46
+case-web was online at	2015-09-01 10:46:16
+	case-web was offline normally at	2015-09-01 10:46:16
+case-web was online at	2015-09-01 10:46:16
+	case-web was offline normally at	2015-09-01 10:46:16
+case-web was online at	2015-09-01 10:59:00
+	case-web was offline normally at	2015-09-01 10:59:00
+case-web was online at	2015-09-01 10:59:06
+	case-web was offline normally at	2015-09-01 10:59:06
+case-web was online at	2015-09-01 10:59:36
+	case-web was offline normally at	2015-09-01 10:59:36
+case-web was online at	2015-09-01 10:59:36
+	case-web was offline normally at	2015-09-01 10:59:36
+case-web was online at	2015-09-01 12:48:07
+	case-web was offline normally at	2015-09-01 12:48:07
+case-web was online at	2015-09-01 12:48:13
+	case-web was offline normally at	2015-09-01 12:48:13
+case-web was online at	2015-09-01 12:48:43
+	case-web was offline normally at	2015-09-01 12:48:44
+case-web was online at	2015-09-01 12:48:44
+	case-web was offline normally at	2015-09-01 12:48:44

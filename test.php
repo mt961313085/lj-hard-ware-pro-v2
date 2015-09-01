@@ -4,7 +4,7 @@ require_once( 'db.php' );
 $config['dbhost'] = 'localhost'; 
 $config['dbuser'] = 'root';
 $config['dbpwd'] = 'blue';
-$config['database'] = 'school_device_db';
+$config['database'] = 'yunkadb';
 
 $db = new db( $config );
 
@@ -14,19 +14,19 @@ $db = new db( $config );
 // 此情况下, 进入 fee-3 还是 fee-4，随机，由程序轮询时机确定，但两种模式下，计费结果相同；
 echo "OPEN dev-00101\r\n";
 $data = array( 'student_no'=>2, 'ins'=>'OPEN', 'dev_state'=>0, 'open_t'=>0, 'ins_recv_t'=>time(), 'state_recv_t'=>time() );
-$db->update( 'devices', $data, 'dev_id="00101"' );
+$db->update( 'devices_ctrl', $data, 'dev_id="00101"' );
 
 web_send_ins( "[web,".time().",OPEN,00101]" );
 
 sleep( 6 );
 echo "OPEN dev-00106\r\n";
 $data = array( 'student_no'=>2, 'ins'=>'OPEN', 'dev_state'=>0, 'open_t'=>0, 'ins_recv_t'=>time(), 'state_recv_t'=>time() );
-$db->update( 'devices', $data, 'dev_id="00106"' );
+$db->update( 'devices_ctrl', $data, 'dev_id="00106"' );
 
 web_send_ins( "[web,".time().",OPEN,00106]" );
 
 sleep( 30 );
-$res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t from devices where dev_id="00101" or dev_id="00106"' );
+$res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t from devices_ctrl where dev_id="00101" or dev_id="00106"' );
 foreach( $res as $v0 ) {
 	foreach( $v0 as $k => $v ) {
 		echo "$k: $v\t\t";
@@ -38,18 +38,18 @@ $db->free_result();
 
 echo "CLOSE dev-00101\r\n";
 $data = array( 'student_no'=>2, 'ins'=>'CLOSE', 'ins_recv_t'=>time() );
-$db->update( 'devices', $data, 'dev_id="00101"' );
+$db->update( 'devices_ctrl', $data, 'dev_id="00101"' );
 
 web_send_ins( "[web,".time().",CLOSE,00101]" );
 
 echo "CLOSE dev-00106\r\n";
 $data = array( 'student_no'=>2, 'ins'=>'CLOSE', 'ins_recv_t'=>time() );
-$db->update( 'devices', $data, 'dev_id="00106"' );
+$db->update( 'devices_ctrl', $data, 'dev_id="00106"' );
 
 web_send_ins( "[web,".time().",CLOSE,00106]" );
 
 sleep( 10 );
-$res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t from devices where dev_id="00101" or dev_id="00106"' );
+$res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t from devices_ctrl where dev_id="00101" or dev_id="00106"' );
 foreach( $res as $v0 ) {
 	foreach( $v0 as $k => $v ) {
 		echo "$k: $v\t\t";
@@ -63,12 +63,12 @@ foreach( $res as $v0 ) {
 // 进行此项测试，必须将hard_ware.php反馈状态设为0000C
 echo "OPEN dev-00102\r\n";
 $data = array( 'student_no'=>2, 'ins'=>'OPEN', 'dev_state'=>0, 'open_t'=>0, 'ins_recv_t'=>time(), 'ins_send_t'=>0 );
-$db->update( 'devices', $data, 'dev_id="00102"' );
+$db->update( 'devices_ctrl', $data, 'dev_id="00102"' );
 
 web_send_ins( "[web,".time().",OPEN,00102]" );
 
 sleep( 6 );
-$res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t from devices where dev_id="00103"' );
+$res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t from devices_ctrl where dev_id="00103"' );
 foreach( $res as $v0 ) {
 	foreach( $v0 as $k => $v ) {
 		echo "$k: $v\t\t";
@@ -83,10 +83,10 @@ foreach( $res as $v0 ) {
 // 不开硬件设备终端，则心跳超时机制处理，由 fee-1 计费
 echo "OPEN dev-00103 successfully and then break \r\n";
 $data = array( 'student_no'=>2, 'ins'=>'OPEN', 'dev_state'=>0, 'open_t'=>time(), 'ins_recv_t'=>time(), 'ins_send_t'=>0, 'state_recv_t'=>time() );
-$db->update( 'devices', $data, 'dev_id="00103"' );
+$db->update( 'devices_ctrl', $data, 'dev_id="00103"' );
 
 sleep( 40 );
-$res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t, close_t from devices where dev_id="00103"' );
+$res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t, close_t from devices_ctrl where dev_id="00103"' );
 foreach( $res as $v0 ) {
 	foreach( $v0 as $k => $v ) {
 		echo "$k: $v\t\t";
@@ -103,10 +103,10 @@ foreach( $res as $v0 ) {
 //			系统再次重发几次关闭指令，然后将设置 remark=‘err’，标识设备故障
 echo "CLOSE dev-00104 and dev_state always 1 \r\n";
 $data = array( 'student_no'=>2, 'ins'=>'CLOSE', 'dev_state'=>1, 'open_t'=>time(), 'ins_recv_t'=>time(), 'ins_send_t'=>0, 'state_recv_t'=>time() );
-$db->update( 'devices', $data, 'dev_id="00104"' );
+$db->update( 'devices_ctrl', $data, 'dev_id="00104"' );
 
 sleep( 60 );
-$res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t, close_t from devices where dev_id="00104"' );
+$res = $db->get_all( 'select student_no, ins, ins_recv_t, dev_state, open_t, close_t from devices_ctrl where dev_id="00104"' );
 foreach( $res as $v0 ) {
 	foreach( $v0 as $k => $v ) {
 		echo "$k: $v\t\t";
