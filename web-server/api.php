@@ -142,7 +142,7 @@
 				$item['deviceDesc'] = $item['building'].$building_info['device_desc'];
 				
 				$item['deviceStatus'] = 2;					// 被他人占用
-				if( $v['student_no']==-1 ) {
+				if( $v['student_no']=='-1' ) {
 					if( $v['dev_state']=='0' )
 						$item['deviceStatus'] = 0;			// 设备空闲
 				}
@@ -501,11 +501,12 @@
 				 }';
 		}
 
-		//用户登录
 		public function login( $student_no, $student_password ) {
+			
 			$response = $this->signInAndGetUser( $student_no, $student_password );
 			$result['resp_desc'] = $response['resp_desc'];
 			$result['resp_code'] = $response['resp_code'];
+				
 			if( $result['resp_code']>0 ) {
 				$result['data'] = $response['data'];
 				echo json_encode( $result );
@@ -513,16 +514,16 @@
 			elseif( $result['resp_code']==0 ) {
 				//同步用户信息
 				$user_map = $response['data']['userMap'];
-				$row = $this->db->get_one("select `id`,`studentNo`,`sex`,`phone`,`department`,`school_zone`,`from`,`graduated`,`home_address`,`nation`,`carrier_account`,`wash_setting`,`cardNo`,`userName`,`nickName`,`headImg`,`email`,`cardBalance`,`monthlyAmt`,`grade`,`major` FROM `user_info`  where studentNo='$student_no' limit 1");
+				$row = $this->db->get_one( "select `id`,`studentNo`,`sex`,`phone`,`department`,`school_zone`,`from`,`graduated`,`home_address`,`nation`,`carrier_account`,`wash_setting`,`cardNo`,`userName`,`nickName`,`headImg`,`email`,`cardBalance`,`monthlyAmt`,`grade`,`major` FROM `user_info`  where studentNo='$student_no' limit 1" );
 				//更新
 				if( $user_map['cardNo'] ) {
 					$user_info['cardNo'] = $user_map['cardNo'];
 				}
-				
+					
 				if( $user_map['userName'] ) {
 					$user_info['userName'] = $user_map['userName'];
 				}
-				
+					
 				if( $user_map['nickName'] ) {
 					$user_info['nickName'] = $user_map['nickName'];
 				}
@@ -542,16 +543,12 @@
 				//加密token
 				//$user_info["token"] = $user_map["token"];
 				$auth_token = $student_no.'|>|'.$student_password.'|>|'.$user_map['token'];
-				$encode_auth_token = $this->authcode( $auth_token, 'ENCODE', $encode_auth_key );
+				$encode_auth_token = $this->authcode( $auth_token, 'ENCODE', $encode_auth_key );		// $encode_auth_key 没有赋值
 				$user_info['token'] = $encode_auth_token;
+				
 				if( $row ) {
 					$condition = "studentNo='$student_no'";
 					$query = $this->db->update( 'user_info', $user_info, $condition );
-					/*if($query){
-						$this->get_user_info($student_no, $token);
-					}else{
-						$result["data"] = $response["data"]["userMap"];
-					}*/
 				}
 				else {
 					//插入
@@ -559,7 +556,7 @@
 					$user_info['headImg'] = $user_map['headImg'];
 					$user_info['phone'] = $user_map['phone'];
 					$user_info['email'] = $user_map['email'];
-					$query = $this->db->insert('user_info',$user_info);
+					$query = $this->db->insert( 'user_info', $user_info );
 				}
 				
 				if( $query ) {
@@ -568,10 +565,11 @@
 					$result['resp_desc'] = '';
 					$result['resp_code'] = '0';
 					$result['data'] = $row;
-					echo json_encode($result);
-				}else{
+					echo json_encode( $result );
+				}
+				else {
 					$result['data'] = $response['data']['userMap'];
-					echo json_encode($result);
+					echo json_encode( $result );
 				}			
 			}
 			else {
@@ -580,7 +578,7 @@
 					"resp_code" : "1666",
 					"data"      : "{}"
 				}';
-			}
+			}	
 		}
 
 		public function get_card_transaction( $student_no, $token, $page_index=1, $page_size=10, $begin_date=0, $end_date=0 ) {

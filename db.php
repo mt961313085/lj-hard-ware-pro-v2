@@ -15,12 +15,12 @@ class db{
      * 构造函数
      * 私有
      */
-    public function __construct($config, $pconnect = false) {
+    public function __construct($config, $pconnect=false) {
         $this->config = $config;
         if (!$pconnect) {
-            $this->link = @ mysql_connect($this->config["dbhost"], $this->config["dbuser"], $this->config["dbpwd"]);
+            $this->link = mysql_connect($this->config["dbhost"], $this->config["dbuser"], $this->config["dbpwd"]);
         } else {
-            $this->link = @ mysql_pconnect($this->host, $this->user, $this->pwd);
+            $this->link = mysql_pconnect($this->host, $this->user, $this->pwd);
         }
         mysql_select_db($this->config["database"]);
         $this->query("SET NAMES '{$this->charset}'", $this->link);

@@ -44,7 +44,7 @@
 	$sock_ids = array();								// 对应每个连接进来的 sock
 	$check_db_t = 0;
 	
-    while(TRUE) {
+    while( 1 ) {
 		
 		$dev_ids = array();					// 记录此次接收到的所有控制指令涉及的控制板id
 		
@@ -65,7 +65,7 @@
 		// loop through all the clients that have data to read from
         foreach( $read as $read_sock ) {
 
-            $data = @socket_read( $read_sock, 1024*5, PHP_BINARY_READ );
+            $data = socket_read( $read_sock, 1024*5, PHP_BINARY_READ );
 			$key = search_sock( $sock_ids, $read_sock );
 			$sock_ids[$key]->lt = time();
 

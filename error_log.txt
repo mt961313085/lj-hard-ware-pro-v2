@@ -373,3 +373,15 @@ case-web was online at	2015-09-01 23:29:48
 	case-web was offline normally at	2015-09-01 23:29:48
 case-web was online at	2015-09-01 23:29:58
 	case-web was offline normally at	2015-09-01 23:29:58
+case-web was online at	2015-09-02 00:16:04
+	case-web was offline normally at	2015-09-02 00:16:04
+case-web was online at	2015-09-02 00:16:14
+	case-web was offline normally at	2015-09-02 00:16:14
+case-web was online at	2015-09-02 00:24:54
+	case-web was offline normally at	2015-09-02 00:24:54
+case-web was online at	2015-09-02 00:25:04
+	case-web was offline normally at	2015-09-02 00:25:04
+case-web was online at	2015-09-02 01:00:07
+	case-web was offline normally at	2015-09-02 01:00:08
+case-web was online at	2015-09-02 01:00:18
+	case-web was offline normally at	2015-09-02 01:00:18

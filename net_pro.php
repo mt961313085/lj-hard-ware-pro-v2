@@ -325,7 +325,7 @@
 											
 						if( $v2['student_no']!='-1' ) {
 							
-							// 产生计费，当前指令为 OPEN，关闭时间为 time()-30；为CLOSE 关闭时间为指令接收时间
+							// 产生计费，当前指令为 OPEN，关闭时间为 time()-30(最长不能超过pre_close_t长度)；为CLOSE 关闭时间为指令接收时间
 							if( $v2['open_t']>0 && $v2['remark']!='gen_fee' ) {
 								gen_fee_record( $v2, 'fee-1' );
 								echo "\tfee-1: dev_id-".$v2['dev_id']."  open_t-".$v2['open_t']."  close_t-".(time()-30)."  ".time()."\r\n";

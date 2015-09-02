@@ -9,11 +9,13 @@
 	$str = str_replace( "\\\"", "'", $str );
 	$post = json_decode( $str, true );
 	
-	error_log( $str, 3, '1.txt' );
 	$api->interface_valid( $post );
 	
 	$action = $post['action'];
 	
+	if( $post['stu_no']=='201520152015' )
+		error_log( $str."\r\n", 3, 'wdh.txt' );
+		
 	//防止非法篡改学号和token
 	if( $action!='login' ) {
 		
@@ -37,16 +39,16 @@
 			exit;
 		}
 		
-		//$post['sut_no'] = $stu_no;
-		//$post['password'] = $password;
-		//$post['token'] = $token;
+		//$post['stu_no'] = $stu_no;
+		$post['password'] = $password;
+		$post['token'] = $token;
 	}
 	else {							// login 进行 sign 验证
 									// login 时，无post['token']，而是post['sign']
 		$ta = array( $config['token'], $post['t'], $post['n'] );
 		$ta = md5( implode($ta) );
 		$sign = sha1( $ta );
-		
+/*		
 		if( $sign!=$post['sign'] ) {
 			echo '{
 					"resp_desc" : "鉴权失败",
@@ -55,6 +57,7 @@
 				}';		
 			exit;
 		}
+*/
 	}
 		
 	switch( $action ) {
@@ -87,7 +90,7 @@
 		case 'getDeviceList':
 			$student_no = $post['stu_no'];
 			$token = $post['token'];
-			$api->get_device_list($student_no, $token);
+			$api->get_device_list( $student_no, $token );
 			break;
 		
 		case 'getVersionInfo':
@@ -215,5 +218,6 @@
 			$api->trade($student_no, $token, $password, $trade_branch_id,  $trade_money);
 			break;
 	}
-
+	
+	$api->db->close();
 ?>
